@@ -39,10 +39,10 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li>123 Real Estate Ave</li>
-              <li>New York, NY 10001</li>
-              <li>Phone: (555) 123-4567</li>
-              <li>Email: info@realestate.com</li>
+              <li>183 Real Estate Ave</li>
+              <li>Chadlodiya Ahmedabad</li>
+              <li>Phone: +91 9726008438</li>
+              <li>Email: kuldeeppatel7634@gmail.com</li>
             </ul>
           </div>
         </div>
