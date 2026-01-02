@@ -10,7 +10,7 @@ export default function Dashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-    const { user, loading, token } = useSelector((state) => state.auth);
+  const { user, loading, token } = useSelector((state) => state.auth);
   const { list: favorites } = useSelector((state) => state.favorites);
   const { list: appointments } = useSelector((state) => state.appointments);
 
@@ -40,12 +40,12 @@ export default function Dashboard() {
   }, [user]);
 
   /* ---------------- FETCH DATA ---------------- */
-    useEffect(() => {
-      if (token) {
-        dispatch(fetchFavorites());
-        dispatch(fetchAppointments());
-      }
-    }, [dispatch, token]);
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchFavorites());
+      dispatch(fetchAppointments());
+    }
+  }, [dispatch, token]);
 
   /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
@@ -70,16 +70,16 @@ export default function Dashboard() {
     }
   };
 
-    const userAppointments = appointmentsList.filter(
-      (a) => a.user_id === user?._id || a.user_id?._id === user?._id
-    );
+  const userAppointments = appointmentsList.filter(
+    (a) => a.user_id === user?._id || a.user_id?._id === user?._id
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
                 <span className="text-2xl font-bold text-indigo-600">
@@ -95,16 +95,16 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowEditProfile(true)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
               >
                 Edit Profile
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="flex-1 sm:flex-none px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-center"
               >
                 Logout
               </button>
@@ -112,15 +112,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs with Horizontal Scroll on Mobile */}
         <div className="bg-white rounded-xl shadow-sm mb-6">
-          <div className="border-b">
-            <nav className="flex gap-4 px-6">
+          <div className="border-b overflow-x-auto">
+            <nav className="flex min-w-max px-4 gap-1 sm:gap-4">
               {["overview", "favorites", "appointments", "profile"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-2 border-b-2 font-medium capitalize ${
+                  className={`py-4 px-3 sm:px-4 border-b-2 font-medium text-sm sm:text-base whitespace-nowrap capitalize ${
                     activeTab === tab
                       ? "border-indigo-600 text-indigo-600"
                       : "border-transparent text-gray-500"
@@ -132,13 +132,13 @@ export default function Dashboard() {
             </nav>
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* OVERVIEW */}
             {activeTab === "overview" && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <div className="bg-indigo-50 rounded-xl p-6">
                   <p className="text-2xl font-bold text-indigo-600">
-                      {favoritesList.length}
+                    {favoritesList.length}
                   </p>
                   <p className="text-indigo-800">Saved Properties</p>
                 </div>
@@ -165,15 +165,13 @@ export default function Dashboard() {
 
             {/* FAVORITES */}
             {activeTab === "favorites" && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {favoritesList.length === 0 ? (
                   <p className="text-gray-500 col-span-3 text-center py-8">No favorites yet</p>
                 ) : (
                   favoritesList.map((fav) => {
-                    // Backend returns favorite object with `property` nested
                     const raw = fav.property || fav.property_id || null;
                     if (!raw) return null;
-                    // Normalize so components expect `_id` and `property_id`
                     const propertyObj = {
                       ...raw,
                       _id: raw.property_id ?? raw._id ?? raw.id,
@@ -193,35 +191,60 @@ export default function Dashboard() {
             {/* APPOINTMENTS */}
             {activeTab === "appointments" && (
               <div className="space-y-4">
-                {userAppointments.map((apt) => (
-                  <div
-                    key={apt._id}
-                    className="bg-gray-50 rounded-lg p-4 flex justify-between"
-                  >
-                    <div>
-                      <h4 className="font-medium">
-                        {apt.property_id?.title || "Property Visit"}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {new Date(
-                          apt.appointment_date || apt.date
-                        ).toLocaleDateString()}
-                      </p>
+                {userAppointments.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No appointments yet</p>
+                ) : (
+                  userAppointments.map((apt) => (
+                    <div
+                      key={apt._id}
+                      className="bg-gray-50 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
+                    >
+                      <div>
+                        <h4 className="font-medium">
+                          {apt.property_id?.title || "Property Visit"}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {new Date(
+                            apt.appointment_date || apt.date
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
+                        apt.status === "confirmed" ? "bg-green-100 text-green-700" :
+                        apt.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                        "bg-red-100 text-red-700"
+                      }`}>
+                        {apt.status}
+                      </span>
                     </div>
-                    <span className="capitalize">{apt.status}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             )}
 
             {/* PROFILE */}
             {activeTab === "profile" && (
               <div className="space-y-3 max-w-xl">
-                <p><b>Name:</b> {user?.name || user?.user_name}</p>
-                <p><b>Email:</b> {user?.email || user?.user_email}</p>
-                <p><b>Phone:</b> {user?.phone || user?.user_mobile}</p>
-                <p><b>Address:</b> {user?.address || user?.user_address}</p>
-                <p><b>Role:</b> {user?.role}</p>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-500">Name</p>
+                  <p className="font-medium">{user?.name || user?.user_name}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium">{user?.email || user?.user_email}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="font-medium">{user?.phone || user?.user_mobile || "N/A"}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="font-medium">{user?.address || user?.user_address || "N/A"}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-500">Role</p>
+                  <p className="font-medium capitalize">{user?.role || "user"}</p>
+                </div>
               </div>
             )}
           </div>
@@ -230,12 +253,12 @@ export default function Dashboard() {
 
       {/* EDIT PROFILE MODAL */}
       {showEditProfile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Edit Profile</h3>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <input
-                className="w-full border p-2 rounded"
+                className="w-full border p-3 rounded-lg"
                 value={editForm.name}
                 onChange={(e) =>
                   setEditForm({ ...editForm, name: e.target.value })
@@ -243,7 +266,7 @@ export default function Dashboard() {
                 placeholder="Name"
               />
               <input
-                className="w-full border p-2 rounded"
+                className="w-full border p-3 rounded-lg"
                 value={editForm.email}
                 onChange={(e) =>
                   setEditForm({ ...editForm, email: e.target.value })
@@ -251,7 +274,7 @@ export default function Dashboard() {
                 placeholder="Email"
               />
               <input
-                className="w-full border p-2 rounded"
+                className="w-full border p-3 rounded-lg"
                 value={editForm.phone}
                 onChange={(e) =>
                   setEditForm({ ...editForm, phone: e.target.value })
@@ -259,25 +282,26 @@ export default function Dashboard() {
                 placeholder="Phone"
               />
               <textarea
-                className="w-full border p-2 rounded"
+                className="w-full border p-3 rounded-lg"
                 value={editForm.address}
                 onChange={(e) =>
                   setEditForm({ ...editForm, address: e.target.value })
                 }
                 placeholder="Address"
+                rows={3}
               />
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setShowEditProfile(false)}
-                  className="w-1/2 border rounded p-2"
+                  className="w-1/2 border rounded-lg p-3 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-1/2 bg-indigo-600 text-white rounded p-2"
+                  className="w-1/2 bg-indigo-600 text-white rounded-lg p-3 hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {loading ? "Saving..." : "Save"}
                 </button>

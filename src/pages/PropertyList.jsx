@@ -1,10 +1,120 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProperties } from "../redux/slices/propertySlice";
 import { fetchCategories } from "../redux/slices/categorySlice";
 import { fetchLocations } from "../redux/slices/locationSlice";
 import PropertyCard from "../components/PropertyCard";
+
+// Separate FiltersContent component to prevent unnecessary re-renders
+function FiltersContent({ filters, categoriesList, locationsList, handleFilterChange }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Filters</h2>
+        <button
+          onClick={() =>
+            handleFilterChange("reset", null)
+          }
+          className="px-5 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 transition"
+        >
+          Reset
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div className="relative">
+          <svg
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search properties..."
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all"
+            value={filters.search}
+            onChange={(e) => handleFilterChange("search", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Category */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+        <select
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          value={filters.category}
+          onChange={(e) => handleFilterChange("category", e.target.value)}
+        >
+          <option value="">All Categories</option>
+          {categoriesList.map((cat) => (
+            <option key={cat.category_id} value={cat.category_id}>
+              {cat.category_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Location */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+        <select
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          value={filters.location}
+          onChange={(e) => handleFilterChange("location", e.target.value)}
+        >
+          <option value="">All Locations</option>
+          {locationsList.map((loc) => (
+            <option key={loc.location_id} value={loc.location_id}>
+              {loc.city}, {loc.state}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Property Type */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+        <select
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          value={filters.propertyType}
+          onChange={(e) => handleFilterChange("propertyType", e.target.value)}
+        >
+          <option value="">All Types</option>
+          <option value="sale">For Sale</option>
+          <option value="rent">For Rent</option>
+        </select>
+      </div>
+
+      {/* Price Range */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            placeholder="Min"
+            className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            value={filters.minPrice}
+            onChange={(e) => handleFilterChange("minPrice", e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Max"
+            className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            value={filters.maxPrice}
+            onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function PropertyList() {
   const dispatch = useDispatch();
@@ -16,6 +126,7 @@ export default function PropertyList() {
   const categoriesList = Array.isArray(categories) ? categories : [];
   const locationsList = Array.isArray(locations) ? locations : [];
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
@@ -26,27 +137,21 @@ export default function PropertyList() {
     maxPrice: searchParams.get("maxPrice") || "",
   });
 
-  // Helper function to get category ID from property
-  const getPropertyCategoryId = (property) => {
-    if (!property.category_id) return null;
-    // Handle object format with _id or category_id
-    if (typeof property.category_id === 'object') {
-      return property.category_id._id || property.category_id.category_id || property.category_id.id;
+  // Memoized handleFilterChange
+  const handleFilterChange = useCallback((key, value) => {
+    if (key === "reset") {
+      setFilters({
+        search: "",
+        category: "",
+        location: "",
+        propertyType: "",
+        minPrice: "",
+        maxPrice: "",
+      });
+    } else {
+      setFilters((prev) => ({ ...prev, [key]: value }));
     }
-    // Handle direct ID (number or string)
-    return property.category_id;
-  };
-
-  // Helper function to get location ID from property
-  const getPropertyLocationId = (property) => {
-    if (!property.location_id) return null;
-    // Handle object format with _id or location_id
-    if (typeof property.location_id === 'object') {
-      return property.location_id._id || property.location_id.location_id || property.location_id.id;
-    }
-    // Handle direct ID (number or string)
-    return property.location_id;
-  };
+  }, []);
 
   // Client-side filtered properties
   const properties = useMemo(() => {
@@ -62,15 +167,13 @@ export default function PropertyList() {
       );
     }
 
-    // Filter by category - use raw data if available
+    // Filter by category
     if (filters.category) {
       filtered = filtered.filter((p) => {
-        // Try raw data first (contains original backend fields)
         const raw = p.raw;
         if (raw) {
           return String(raw.category_id) === String(filters.category);
         }
-        // Fallback to normalized data
         const catId = p.category_id;
         if (catId === null || catId === undefined) return false;
         const propCatId = typeof catId === 'object' ? catId._id || catId.category_id || catId.id : catId;
@@ -78,7 +181,7 @@ export default function PropertyList() {
       });
     }
 
-    // Filter by location - use raw data if available
+    // Filter by location
     if (filters.location) {
       filtered = filtered.filter((p) => {
         const raw = p.raw;
@@ -92,7 +195,7 @@ export default function PropertyList() {
       });
     }
 
-    // Filter by property type - case-insensitive exact match
+    // Filter by property type
     if (filters.propertyType) {
       filtered = filtered.filter((p) => {
         const raw = p.raw;
@@ -124,14 +227,20 @@ export default function PropertyList() {
   }, [dispatch]);
 
   useEffect(() => {
-    // Fetch all properties from backend (no filter params needed)
     dispatch(fetchProperties({}));
-    setSearchParams(filters);
-  }, [dispatch, setSearchParams]);
+  }, [dispatch]);
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.search) params.set("search", filters.search);
+    if (filters.category) params.set("category", filters.category);
+    if (filters.location) params.set("location", filters.location);
+    if (filters.propertyType) params.set("type", filters.propertyType);
+    if (filters.minPrice) params.set("minPrice", filters.minPrice);
+    if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+    setSearchParams(params);
+  }, [filters, setSearchParams]);
 
   const handlePageChange = (page) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -142,111 +251,58 @@ export default function PropertyList() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Properties</h1>
 
+        {/* Mobile Filter Toggle Button */}
+        <button
+          onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+          className="lg:hidden mb-4 flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          {showFiltersMobile ? 'Hide Filters' : 'Show Filters'}
+        </button>
+
         <div className="flex gap-8">
-          {/* Filters Sidebar */}
-          <aside className="w-64 flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
-              <h2 className="text-lg font-semibold mb-4">Filters</h2>
+          {/* Filters Sidebar - Desktop */}
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <FiltersContent 
+              filters={filters} 
+              categoriesList={categoriesList} 
+              locationsList={locationsList} 
+              handleFilterChange={handleFilterChange}
+            />
+          </aside>
 
-              {/* Search */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                <input
-                  type="text"
-                  placeholder="Search properties..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                />
-              </div>
-
-              {/* Category */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  value={filters.category}
-                  onChange={(e) => handleFilterChange("category", e.target.value)}
-                >
-                  <option value="">All Categories</option>
-                  {categoriesList.map((cat) => (
-                    <option key={cat.category_id} value={cat.category_id}>
-                      {cat.category_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Location */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  value={filters.location}
-                  onChange={(e) => handleFilterChange("location", e.target.value)}
-                >
-                  <option value="">All Locations</option>
-                  {locationsList.map((loc) => (
-                    <option key={loc.location_id} value={loc.location_id}>
-                      {loc.city}, {loc.state}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Property Type */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  value={filters.propertyType}
-                  onChange={(e) => handleFilterChange("propertyType", e.target.value)}
-                >
-                  <option value="">All Types</option>
-                  <option value="sale">For Sale</option>
-                  <option value="rent">For Rent</option>
-                </select>
-              </div>
-
-              {/* Price Range */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    value={filters.minPrice}
-                    onChange={(e) => handleFilterChange("minPrice", e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    value={filters.maxPrice}
-                    onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
+          {/* Mobile Filters Drawer */}
+          {showFiltersMobile && (
+            <div className="lg:hidden fixed inset-0 z-50">
+              <div 
+                className="absolute inset-0 bg-black bg-opacity-50"
+                onClick={() => setShowFiltersMobile(false)}
+              />
+              <div className="absolute right-0 top-0 bottom-0 w-80 max-w-full bg-white shadow-xl overflow-y-auto">
+                <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-white">
+                  <h2 className="text-lg font-semibold">Filters</h2>
+                  <button
+                    onClick={() => setShowFiltersMobile(false)}
+                    className="p-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="p-4">
+                  <FiltersContent 
+                    filters={filters} 
+                    categoriesList={categoriesList} 
+                    locationsList={locationsList} 
+                    handleFilterChange={handleFilterChange}
                   />
                 </div>
               </div>
-
-              {/* Reset Filters */}
-              <button
-                onClick={() =>
-                  setFilters({
-                    search: "",
-                    category: "",
-                    location: "",
-                    propertyType: "",
-                    minPrice: "",
-                    maxPrice: "",
-                  })
-                }
-                className="w-full py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-              >
-                Reset Filters
-              </button>
             </div>
-          </aside>
+          )}
 
           {/* Property Grid */}
           <main className="flex-1">
@@ -264,7 +320,7 @@ export default function PropertyList() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {properties.map((property) => (
                     <PropertyCard key={property._id} property={property} />
                   ))}
@@ -272,12 +328,12 @@ export default function PropertyList() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex justify-center mt-8 gap-2">
+                  <div className="flex justify-center mt-8 gap-2 overflow-x-auto pb-2">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-lg ${
+                        className={`px-4 py-2 rounded-lg flex-shrink-0 ${
                           page === currentPage
                             ? "bg-indigo-600 text-white"
                             : "bg-white text-gray-700 hover:bg-gray-100"

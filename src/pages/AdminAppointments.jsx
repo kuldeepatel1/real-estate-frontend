@@ -18,6 +18,77 @@ export default function AdminAppointments() {
     dispatch(updateAppointment({ id: appointment._id, data: { status: newStatus } }));
   };
 
+  // Get status badge styling
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "confirmed":
+        return "bg-green-100 text-green-700";
+      case "pending":
+        return "bg-yellow-100 text-yellow-700";
+      case "cancelled":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  // Appointment Card Component for Mobile
+  const AppointmentCard = ({ apt }) => {
+    const statusBadge = getStatusBadge(apt.status);
+
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h4 className="font-semibold text-gray-900">
+              {apt.property_id?.title || "Property Visit"}
+            </h4>
+            <p className="text-sm text-gray-500">
+              {apt.user_id?.name || "User"}
+            </p>
+          </div>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusBadge}`}>
+            {apt.status || "pending"}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+          <div className="flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {new Date(apt.appointment_date || apt.date).toLocaleDateString()}
+          </div>
+          <div className="flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {apt.appointment_time || apt.time}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          {apt.status === "pending" && (
+            <>
+              <button
+                onClick={() => handleStatusChange(apt, "confirmed")}
+                className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition font-medium"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => handleStatusChange(apt, "cancelled")}
+                className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition font-medium"
+              >
+                Reject
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="mb-6">
@@ -25,7 +96,8 @@ export default function AdminAppointments() {
         <p className="text-gray-500">Manage property viewing appointments</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      {/* Desktop Table */}
+      <div className="hidden lg:block bg-white rounded-xl shadow-sm overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -66,11 +138,7 @@ export default function AdminAppointments() {
                     <p className="text-sm text-gray-500">{apt.appointment_time || apt.time}</p>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      apt.status === "confirmed" ? "bg-green-100 text-green-700" :
-                      apt.status === "pending" ? "bg-yellow-100 text-yellow-700" :
-                      "bg-red-100 text-red-700"
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(apt.status)}`}>
                       {apt.status || "pending"}
                     </span>
                   </td>
@@ -99,6 +167,23 @@ export default function AdminAppointments() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : appointmentsList.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            No appointments found
+          </div>
+        ) : (
+          appointmentsList.map((apt) => (
+            <AppointmentCard key={apt._id} apt={apt} />
+          ))
+        )}
       </div>
     </AdminLayout>
   );

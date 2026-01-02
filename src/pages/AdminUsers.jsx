@@ -20,7 +20,6 @@ export default function AdminUsers() {
     try {
       const res = await getAllUsers();
       const payload = res?.data;
-      // Try multiple common shapes for user lists
       let list = [];
       if (Array.isArray(payload)) list = payload;
       else if (Array.isArray(payload?.data)) list = payload.data;
@@ -36,8 +35,6 @@ export default function AdminUsers() {
   };
 
   const getUserStatus = (user) => {
-    // Backend returns is_verified and is_active fields
-    // Only check is_active for status since is_verified is internal
     const isActive = user.is_active;
     
     if (!isActive) {
@@ -56,6 +53,46 @@ export default function AdminUsers() {
     setSelectedUser(null);
   };
 
+  // User Card Component for Mobile
+  const UserCard = ({ user }) => {
+    const userKey = user._id || user.user_id || user.id;
+    const status = getUserStatus(user);
+    const userName = user.name || user.user_name;
+    const userEmail = user.email || user.user_email;
+    const userMobile = user.mobile || user.user_mobile;
+    const userRole = user.role || user.user_role;
+
+    return (
+      <div 
+        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => handleViewUser(user)}
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-indigo-600 font-bold text-lg">
+              {userName?.charAt(0) || "U"}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-gray-900 truncate">{userName}</h3>
+            <p className="text-sm text-gray-500 truncate">{userEmail}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}>
+                {status.text}
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                {userRole || "user"}
+              </span>
+            </div>
+          </div>
+          <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="mb-6">
@@ -63,7 +100,8 @@ export default function AdminUsers() {
         <p className="text-gray-500">Manage all registered users</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      {/* Desktop Table */}
+      <div className="hidden lg:block bg-white rounded-xl shadow-sm overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -131,9 +169,26 @@ export default function AdminUsers() {
         </table>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-3">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            No users found
+          </div>
+        ) : (
+          users.map((u, i) => (
+            <UserCard key={u._id || u.user_id || u.id || `u-${i}`} user={u} />
+          ))
+        )}
+      </div>
+
       {/* User Detail Modal */}
       {showModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900">User Details</h3>
