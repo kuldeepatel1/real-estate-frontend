@@ -5,7 +5,6 @@ import { fetchProperties } from "../redux/slices/propertySlice";
 import { fetchAppointments } from "../redux/slices/appointmentSlice";
 import { fetchCategories } from "../redux/slices/categorySlice";
 import { fetchLocations } from "../redux/slices/locationSlice";
-import AdminLayout from "../components/AdminLayout";
 
 export default function AdminDashboard() {
   const dispatch = useDispatch();
@@ -99,13 +98,12 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <AdminLayout>
+    <>
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
         <p className="text-gray-500 mt-1">Welcome back, {user?.name || user?.user_name}</p>
       </div>
 
-      {/* Stats Grid - Responsive: 2 cols on mobile, 2 on sm, 3 on md, 4 on lg */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat) => (
           <div key={stat.label} className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
@@ -217,7 +215,7 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 }
 

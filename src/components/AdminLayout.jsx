@@ -8,12 +8,17 @@ export default function AdminLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
-    setSidebarOpen(false);
+    setMobileSidebarOpen(false);
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
   };
 
   const navItems = [
@@ -33,7 +38,7 @@ export default function AdminLayout({ children }) {
       <Link
         key={item.path}
         to={item.path}
-        onClick={() => setSidebarOpen(false)}
+        onClick={() => setMobileSidebarOpen(false)}
         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
           isActive
             ? "bg-indigo-600 text-white"
@@ -50,16 +55,16 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-gray-900 text-white fixed inset-y-0 left-0 z-30">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <aside className={`hidden lg:flex lg:flex-col bg-gray-900 text-white fixed inset-y-0 left-0 z-30 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'}`}>
         {/* Header */}
-        <div className="flex items-center gap-2 p-4 border-b border-gray-700 h-16">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+        <div className={`flex items-center gap-2 p-4 border-b border-gray-700 h-16 ${sidebarOpen ? 'justify-start' : 'justify-center'}`}>
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
           </div>
-          <span className="text-lg font-bold text-indigo-400">Admin Panel</span>
+          {sidebarOpen && <span className="text-lg font-bold text-indigo-400">Admin Panel</span>}
         </div>
 
         {/* Navigation */}
@@ -68,34 +73,37 @@ export default function AdminLayout({ children }) {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-gray-700">
-          <div className="flex items-center gap-3 mb-3">
+        <div className={`p-4 border-t border-gray-700 ${sidebarOpen ? '' : 'flex flex-col items-center'}`}>
+          <div className={`flex items-center gap-3 mb-3 ${sidebarOpen ? '' : 'flex-col'}`}>
             <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-sm font-bold">{user?.name?.charAt(0) || user?.user_name?.charAt(0) || "A"}</span>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium truncate">{user?.name || user?.user_name}</p>
-              <p className="text-xs text-gray-400">Administrator</p>
-            </div>
+            {sidebarOpen && (
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">{user?.name || user?.user_name}</p>
+                <p className="text-xs text-gray-400">Administrator</p>
+              </div>
+            )}
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition"
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition ${sidebarOpen ? '' : 'px-2'}`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            Logout
+            {sidebarOpen && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen w-full">
-        {/* Mobile Header */}
+      <div className={`flex-1 flex flex-col min-h-screen w-full transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+
+        {/* Mobile Header - Only visible on small screens */}
         <header className="lg:hidden bg-white border-b border-gray-200 px-4 h-16 flex items-center justify-between fixed top-0 left-0 right-0 z-20 shadow-sm">
           <button
-            onClick={() => setSidebarOpen(true)}
+            onClick={() => setMobileSidebarOpen(true)}
             className="p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,13 +121,34 @@ export default function AdminLayout({ children }) {
           <div className="w-10" />
         </header>
 
+        {/* Desktop Header with Toggle Button - Only visible on large screens */}
+        <header className="hidden lg:flex bg-white border-b border-gray-200 px-4 h-16 items-center justify-between fixed top-0 z-20 shadow-sm" style={{ left: sidebarOpen ? '16rem' : '5rem', right: 0 }}>
+          <button
+            onClick={toggleSidebar}
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarOpen ? "M11 19l-7-7 7-7m8 14l-7-7 7-7" : "M13 5l7 7-7 7M5 5l7 7-7 7"} />
+            </svg>
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
+          </div>
+          <div className="w-10" />
+        </header>
+
         {/* Mobile Sidebar Overlay */}
-        {sidebarOpen && (
-          <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
+        {mobileSidebarOpen && (
+          <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setMobileSidebarOpen(false)} />
         )}
 
         {/* Mobile Sidebar */}
-        <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-gray-900 text-white transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-gray-900 text-white transform transition-transform duration-300 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between p-4 border-b border-gray-700 h-16">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
@@ -129,7 +158,7 @@ export default function AdminLayout({ children }) {
               </div>
               <span className="text-lg font-bold text-indigo-400">Admin Panel</span>
             </div>
-            <button onClick={() => setSidebarOpen(false)} className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800">
+            <button onClick={() => setMobileSidebarOpen(false)} className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -155,12 +184,12 @@ export default function AdminLayout({ children }) {
           </div>
         </aside>
 
-        {/* Page Content - Centered */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 w-full">
-  <div className="max-w-7xl mx-auto w-full">
-    {children}
-  </div>
-</main>
+        {/* Page Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full" style={{ paddingTop: '5rem' }}>
+          <div className="max-w-7xl mx-auto w-full">
+            {children}
+          </div>
+        </main>
 
       </div>
     </div>
