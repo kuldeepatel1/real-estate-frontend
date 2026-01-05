@@ -116,10 +116,6 @@ function App() {
           element={
             <AdminLayout
               title="Properties"
-              actionButton={{
-                label: "Add Property",
-                to: "/admin/properties/add",
-              }}
             >
               <ProtectedRoute requiredRole="admin">
                 <AdminProperties />

@@ -96,6 +96,10 @@ export default function AdminUsers() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="max-w-7xl mx-auto">
+         <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
+          <p className="text-gray-500">Show The property Page Users</p>
+        </div>
         {/* Desktop Table */}
         <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <table className="w-full">

@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import AdminLayout from "../components/AdminLayout";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   fetchProperties,
@@ -265,6 +264,19 @@ export default function AdminProperties() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Properties</h1>
+          <p className="text-gray-500">Manage property listings</p>
+        </div>
+        <Link
+          to="/admin/add-property"
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+        >
+          Add Property
+        </Link>
+      </div>
+
       {/* Desktop Table */}
       <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full">
