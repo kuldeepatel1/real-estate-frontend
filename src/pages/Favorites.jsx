@@ -9,7 +9,9 @@ export default function Favorites() {
   const { list: favorites, loading } = useSelector((state) => state.favorites);
   const { token } = useSelector((state) => state.auth);
   const favoritesList = Array.isArray(favorites) ? favorites : [];
-
+useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   useEffect(() => {
     if (token) {
       dispatch(fetchFavorites());

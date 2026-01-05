@@ -8,6 +8,9 @@ import PropertyCard from "../components/PropertyCard";
 
 // Separate FiltersContent component to prevent unnecessary re-renders
 function FiltersContent({ filters, categoriesList, locationsList, handleFilterChange }) {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
       <div className="flex justify-between items-center mb-4">

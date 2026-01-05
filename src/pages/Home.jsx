@@ -15,7 +15,9 @@ export default function Home() {
   const { user, token } = useSelector((state) => state.auth);
 
   const [search, setSearch] = useState("");
-
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   useEffect(() => {
     // If admin is signed in, send them to the admin dashboard.
     // Do NOT redirect regular users away from the public Home page — they should see Home after login.

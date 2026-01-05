@@ -23,7 +23,9 @@ export default function PropertyDetails() {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState({});
-
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   useEffect(() => {
     dispatch(fetchPropertyById(id));
     dispatch(fetchReviewsByProperty(id));

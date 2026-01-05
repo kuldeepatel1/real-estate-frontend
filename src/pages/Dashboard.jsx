@@ -26,7 +26,9 @@ export default function Dashboard() {
     phone: "",
     address: "",
   });
-
+useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   /* ---------------- PREFILL PROFILE FORM ---------------- */
   useEffect(() => {
     if (user) {
