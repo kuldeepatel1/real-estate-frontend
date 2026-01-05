@@ -39,10 +39,6 @@ class ReviewDAO:
         review_vo_list = ReviewVO.query.filter_by(is_approved=False).all()
         return review_vo_list
 
-    def get_all_reviews(self):
-        review_vo_list = ReviewVO.query.join(UserVO, ReviewVO.user_id == UserVO.user_id).join(PropertyVO, ReviewVO.property_id == PropertyVO.property_id).all()
-        return review_vo_list
-
     def get_property_rating_stats(self, property_id):
         stats = db.session.query(
             func.count(ReviewVO.review_id).label('total_reviews'),

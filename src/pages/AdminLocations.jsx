@@ -72,8 +72,8 @@ export default function AdminLocations() {
   };
 
   return (
-    <AdminLayout>
-      <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Locations</h1>
@@ -209,7 +209,7 @@ export default function AdminLocations() {
           )}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
 

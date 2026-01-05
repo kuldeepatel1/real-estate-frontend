@@ -90,102 +90,107 @@ export default function AdminAppointments() {
   };
 
   return (
-    <AdminLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
-        <p className="text-gray-500">Manage property viewing appointments</p>
-      </div>
-
-      {/* Desktop Table */}
-      <div className="hidden lg:block bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Property</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {loading ? (
+    <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto">
+        {/* Desktop Table */}
+        <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <td colSpan="5" className="px-6 py-12 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
-            ) : appointmentsList.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                  No appointments found
-                </td>
-              </tr>
-            ) : (
-              appointmentsList.map((apt) => (
-                <tr key={apt._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <p className="font-medium">{apt.property_id?.title || "Property"}</p>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
                   </td>
-                  <td className="px-6 py-4">
-                    <p className="font-medium">{apt.user_id?.name || "User"}</p>
-                    <p className="text-sm text-gray-500">{apt.user_id?.email || ""}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-medium">
-                      {new Date(apt.appointment_date || apt.date).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-gray-500">{apt.appointment_time || apt.time}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(apt.status)}`}>
-                      {apt.status || "pending"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      {apt.status === "pending" && (
-                        <>
-                          <button
-                            onClick={() => handleStatusChange(apt, "confirmed")}
-                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleStatusChange(apt, "cancelled")}
-                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
+                </tr>
+              ) : appointmentsList.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12">
+                      <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-gray-500">No appointments found</p>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                appointmentsList.map((apt) => (
+                  <tr key={apt._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-800">{apt.property_id?.title || "Property"}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-800">{apt.user_id?.name || "User"}</p>
+                      <p className="text-sm text-gray-500">{apt.user_id?.email || ""}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-800">
+                        {new Date(apt.appointment_date || apt.date).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm text-gray-500">{apt.appointment_time || apt.time}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(apt.status)}`}>
+                        {apt.status || "pending"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        {apt.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(apt, "confirmed")}
+                              className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition font-medium"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(apt, "cancelled")}
+                              className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition font-medium"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Mobile Card View */}
-      <div className="lg:hidden space-y-4">
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-          </div>
-        ) : appointmentsList.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            No appointments found
-          </div>
-        ) : (
-          appointmentsList.map((apt) => (
-            <AppointmentCard key={apt._id} apt={apt} />
-          ))
-        )}
+        {/* Mobile Card View */}
+        <div className="lg:hidden space-y-4">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+          ) : appointmentsList.length === 0 ? (
+            <div className="text-center py-12">
+              <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-gray-500">No appointments found</p>
+            </div>
+          ) : (
+            appointmentsList.map((apt) => (
+              <AppointmentCard key={apt._id} apt={apt} />
+            ))
+          )}
+        </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
 

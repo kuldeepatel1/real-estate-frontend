@@ -2,7 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProperties, deleteProperty, updateProperty, updatePropertyStatusOptimistic } from "../redux/slices/propertySlice";
+import { 
+  fetchProperties, 
+  deleteProperty, 
+  markPropertyAsSold, 
+  markPropertyAsPending,
+  updateProperty,
+  updatePropertyStatusOptimistic
+} from "../redux/slices/propertySlice";
 import { fetchCategories } from "../redux/slices/categorySlice";
 import { fetchLocations } from "../redux/slices/locationSlice";
 import { getFirstImageUrl, hasImages } from "../utils/imageHelper";
@@ -130,8 +137,18 @@ export default function AdminProperties() {
     // Optimistic update - update local state immediately for better UX
     dispatch(updatePropertyStatusOptimistic({ id: propertyId, status: newStatus }));
     
-    // Try to sync with backend (will fail if no API endpoint exists)
-    dispatch(updateProperty({ id: propertyId, data: { status: newStatus } }))
+    // Dispatch the appropriate action based on status type
+    let asyncAction;
+    if (newStatus === 'sold') {
+      asyncAction = markPropertyAsSold(propertyId);
+    } else if (newStatus === 'pending') {
+      asyncAction = markPropertyAsPending(propertyId);
+    } else {
+      asyncAction = updateProperty({ id: propertyId, data: { status: newStatus } });
+    }
+    
+    // Execute the async action
+    dispatch(asyncAction)
       .unwrap()
       .then(() => {
         showToast(`Status updated to "${newStatus}" successfully!`, 'success');
@@ -256,168 +273,153 @@ export default function AdminProperties() {
   };
 
   return (
-    <AdminLayout>
-      <div className="w-full ">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Properties</h1>
-            <p className="text-gray-500">Manage all properties</p>
-          </div>
-          <Link
-            to="/admin/properties/add"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
-          >
-            Add Property
-          </Link>
-        </div>
-
-        {/* Desktop Table */}
-        <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-100">
+    <div className="max-w-7xl mx-auto">
+      {/* Desktop Table */}
+      <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reviews</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {loading ? (
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reviews</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <td colSpan="7" className="px-6 py-12 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            ) : propertiesList.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="px-6 py-12 text-center">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12">
+                    <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <p className="text-gray-500">No properties found</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              propertiesList.map((property) => (
+                <tr key={property._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                        {hasImages(property) && !imageErrors[property._id] ? (
+                          <img
+                            src={getFirstImageUrl(property)}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            onError={() => handleImageError(property._id)}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">{property.title || property.property_title}</p>
+                        <p className="text-sm text-gray-500">
+                          {property.location_id?.city || "Location not specified"}
+                        </p>
+                      </div>
+                    </div>
                   </td>
-                </tr>
-              ) : propertiesList.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12">
-                      <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      <p className="text-gray-500">No properties found</p>
+                  <td className="px-6 py-4 font-medium text-gray-800">
+                    ${new Intl.NumberFormat("en-US").format(property.price || property.property_price)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">{property.property_type || "N/A"}</td>
+                  <td className="px-6 py-4 text-gray-600">{getCategoryName(property.category_id)}</td>
+                  <td className="px-6 py-4">
+                    {(() => {
+                      const propId = property._id || property.property_id;
+                      const stats = reviewStats[propId] || {};
+                      return (
+                        <div>
+                          {renderStars(stats.average_rating)}
+                          <span className="text-xs text-gray-500 ml-1">
+                            ({stats.total_reviews || 0} reviews)
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="relative">
+                      {updatingStatus[property._id || property.property_id] && (
+                        <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                        </div>
+                      )}
+                      <select
+                        value={getEffectiveStatus(property)}
+                        onChange={(e) => handleStatusChange(property, e.target.value)}
+                        disabled={updatingStatus[property._id || property.property_id]}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border-0 cursor-pointer ${
+                          getEffectiveStatus(property) === "available" ? "bg-green-100 text-green-700" :
+                          getEffectiveStatus(property) === "sold" ? "bg-red-100 text-red-700" :
+                          getEffectiveStatus(property) === "rented" ? "bg-blue-100 text-blue-700" :
+                          "bg-yellow-100 text-yellow-700"
+                        } ${updatingStatus[property._id || property.property_id] ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="available">Available</option>
+                        <option value="sold">Sold</option>
+                        <option value="rented">Rented</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
+                      <Link
+                        to={`/property/${property._id}`}
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium"
+                      >
+                        View
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(property._id)}
+                        className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors font-medium"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
-              ) : (
-                propertiesList.map((property) => (
-                  <tr key={property._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-16 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                          {hasImages(property) && !imageErrors[property._id] ? (
-                            <img
-                              src={getFirstImageUrl(property)}
-                              alt=""
-                              className="w-full h-full object-cover"
-                              onError={() => handleImageError(property._id)}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-800">{property.title || property.property_title}</p>
-                          <p className="text-sm text-gray-500">
-                            {property.location_id?.city || "Location not specified"}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-medium text-gray-800">
-                      ${new Intl.NumberFormat("en-US").format(property.price || property.property_price)}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{property.property_type || "N/A"}</td>
-                    <td className="px-6 py-4 text-gray-600">{getCategoryName(property.category_id)}</td>
-                    <td className="px-6 py-4">
-                      {(() => {
-                        const propId = property._id || property.property_id;
-                        const stats = reviewStats[propId] || {};
-                        return (
-                          <div>
-                            {renderStars(stats.average_rating)}
-                            <span className="text-xs text-gray-500 ml-1">
-                              ({stats.total_reviews || 0} reviews)
-                            </span>
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="relative">
-                        {updatingStatus[property._id || property.property_id] && (
-                          <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                          </div>
-                        )}
-                        <select
-                          value={getEffectiveStatus(property)}
-                          onChange={(e) => handleStatusChange(property, e.target.value)}
-                          disabled={updatingStatus[property._id || property.property_id]}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border-0 cursor-pointer ${
-                            getEffectiveStatus(property) === "available" ? "bg-green-100 text-green-700" :
-                            getEffectiveStatus(property) === "sold" ? "bg-red-100 text-red-700" :
-                            getEffectiveStatus(property) === "rented" ? "bg-blue-100 text-blue-700" :
-                            "bg-yellow-100 text-yellow-700"
-                          } ${updatingStatus[property._id || property.property_id] ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="available">Available</option>
-                          <option value="sold">Sold</option>
-                          <option value="rented">Rented</option>
-                        </select>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <Link
-                          to={`/property/${property._id}`}
-                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium"
-                        >
-                          View
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(property._id)}
-                          className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors font-medium"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Mobile Card View */}
-        <div className="lg:hidden space-y-4">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            </div>
-          ) : propertiesList.length === 0 ? (
-            <div className="text-center py-12">
-              <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <p className="text-gray-500">No properties found</p>
-            </div>
-          ) : (
-            propertiesList.map((property) => (
-              <PropertyCard key={property._id} property={property} />
-            ))
-          )}
-        </div>
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : propertiesList.length === 0 ? (
+          <div className="text-center py-12">
+            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <p className="text-gray-500">No properties found</p>
+          </div>
+        ) : (
+          propertiesList.map((property) => (
+            <PropertyCard key={property._id} property={property} />
+          ))
+        )}
       </div>
 
       {/* Toast Notification */}
@@ -439,7 +441,7 @@ export default function AdminProperties() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </div>
   );
 }
 

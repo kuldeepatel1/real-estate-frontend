@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Pages
+// Public Pages
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -21,7 +21,7 @@ import AdminCategories from "./pages/AdminCategories";
 import AdminLocations from "./pages/AdminLocations";
 import AdminReviews from "./pages/AdminReviews";
 
-// Components
+// Layouts & Components
 import UserLayout from "./components/UserLayout";
 import AdminLayout from "./components/AdminLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -31,16 +31,41 @@ function App() {
   return (
     <BrowserRouter>
       <AuthWatcher />
+
       <Routes>
-        {/* ---------- PUBLIC ROUTES (No Layout) ---------- */}
+        {/* ---------- PUBLIC ROUTES ---------- */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
-        {/* ---------- USER ROUTES WITH LAYOUT ---------- */}
-        <Route path="/" element={<UserLayout><Home /></UserLayout>} />
-        <Route path="/properties" element={<UserLayout><PropertyList /></UserLayout>} />
-        <Route path="/property/:id" element={<UserLayout><PropertyDetails /></UserLayout>} />
+        {/* ---------- USER ROUTES ---------- */}
+        <Route
+          path="/"
+          element={
+            <UserLayout>
+              <Home />
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path="/properties"
+          element={
+            <UserLayout>
+              <PropertyList />
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path="/property/:id"
+          element={
+            <UserLayout>
+              <PropertyDetails />
+            </UserLayout>
+          }
+        />
+
         <Route
           path="/dashboard"
           element={
@@ -51,6 +76,7 @@ function App() {
             </UserLayout>
           }
         />
+
         <Route
           path="/favorites"
           element={
@@ -62,81 +88,95 @@ function App() {
           }
         />
 
-        {/* ---------- ADMIN ROUTES WITH LAYOUT ---------- */}
+        {/* ---------- ADMIN ROUTES ---------- */}
         <Route
           path="/admin/dashboard"
           element={
-            <AdminLayout>
+            <AdminLayout title="Dashboard">
               <ProtectedRoute requiredRole="admin">
                 <AdminDashboard />
               </ProtectedRoute>
             </AdminLayout>
           }
         />
+
         <Route
           path="/admin/users"
           element={
-            <AdminLayout>
+            <AdminLayout title="Users">
               <ProtectedRoute requiredRole="admin">
                 <AdminUsers />
               </ProtectedRoute>
             </AdminLayout>
           }
         />
+
         <Route
           path="/admin/properties"
           element={
-            <AdminLayout>
+            <AdminLayout
+              title="Properties"
+              actionButton={{
+                label: "Add Property",
+                to: "/admin/properties/add",
+              }}
+            >
               <ProtectedRoute requiredRole="admin">
                 <AdminProperties />
               </ProtectedRoute>
             </AdminLayout>
           }
         />
+
+
         <Route
           path="/admin/properties/add"
           element={
-            <AdminLayout>
+            <AdminLayout title="Add Property">
               <ProtectedRoute requiredRole="admin">
                 <AdminAddProperty />
               </ProtectedRoute>
             </AdminLayout>
           }
         />
+
         <Route
           path="/admin/appointments"
           element={
-            <AdminLayout>
+            <AdminLayout title="Appointments">
               <ProtectedRoute requiredRole="admin">
                 <AdminAppointments />
               </ProtectedRoute>
             </AdminLayout>
           }
         />
+
         <Route
           path="/admin/categories"
           element={
-            <AdminLayout>
+            <AdminLayout title="Categories">
               <ProtectedRoute requiredRole="admin">
                 <AdminCategories />
               </ProtectedRoute>
             </AdminLayout>
           }
         />
+
         <Route
           path="/admin/locations"
           element={
-            <AdminLayout>
+            <AdminLayout title="Locations">
               <ProtectedRoute requiredRole="admin">
                 <AdminLocations />
               </ProtectedRoute>
             </AdminLayout>
           }
         />
+
         <Route
           path="/admin/reviews"
           element={
-            <AdminLayout>
+            <AdminLayout title="Reviews">
               <ProtectedRoute requiredRole="admin">
                 <AdminReviews />
               </ProtectedRoute>
@@ -152,4 +192,3 @@ function App() {
 }
 
 export default App;
-

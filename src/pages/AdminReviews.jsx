@@ -134,11 +134,12 @@ export default function AdminReviews() {
   );
 
   return (
-    <AdminLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Reviews Management</h1>
-        <p className="text-gray-500">Manage and approve property reviews</p>
-      </div>
+    <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Reviews Management</h1>
+          <p className="text-gray-500">Manage and approve property reviews</p>
+        </div>
 
       {/* Loading State */}
       {loading && (
@@ -252,7 +253,8 @@ export default function AdminReviews() {
           ))}
         </div>
       )}
-    </AdminLayout>
+      </div>
+    </div>
   );
 }
 

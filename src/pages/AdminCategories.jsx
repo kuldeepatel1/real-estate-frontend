@@ -56,23 +56,19 @@ export default function AdminCategories() {
     }
   };
 
-  return (
-    <AdminLayout>
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Categories</h1>
-            <p className="text-gray-500">Manage property categories</p>
-          </div>
-          <button
-            onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: "", status: "active" }); }}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
-          >
-            Add Category
-          </button>
-        </div>
+  const addCategoryButton = (
+    <button
+      onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: "", status: "active" }); }}
+      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+    >
+      Add Category
+    </button>
+  );
 
-        {/* Form Modal */}
+  return (
+    <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto">
+        {/* Categories Grid */}
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
@@ -174,7 +170,7 @@ export default function AdminCategories() {
           )}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
 

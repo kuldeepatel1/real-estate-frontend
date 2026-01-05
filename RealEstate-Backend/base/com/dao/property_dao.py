@@ -24,6 +24,7 @@ class PropertyDAO:
             .join(CategoryVO, PropertyVO.category_id == CategoryVO.category_id) \
             .join(LocationVO, PropertyVO.location_id == LocationVO.location_id) \
             .filter(PropertyVO.is_approved == True) \
+            .filter(PropertyVO.property_status != 'sold') \
             .all()
         return property_vo_list
 
@@ -140,4 +141,40 @@ class PropertyDAO:
 
     def get_pending_approvals(self):
         property_vo_list = PropertyVO.query.filter_by(is_approved=False).all()
+        return property_vo_list
+
+    def mark_property_sold(self, property_id):
+        property_vo = PropertyVO.query.get(property_id)
+        if property_vo:
+            property_vo.property_status = 'sold'
+            db.session.commit()
+            return True
+        return False
+
+    def mark_property_pending(self, property_id):
+        property_vo = PropertyVO.query.get(property_id)
+        if property_vo:
+            property_vo.property_status = 'pending'
+            db.session.commit()
+            return True
+        return False
+
+    def get_sold_properties(self):
+        property_vo_list = db.session.query(PropertyVO, UserVO, CategoryVO,
+                                            LocationVO) \
+            .join(UserVO, PropertyVO.user_id == UserVO.user_id) \
+            .join(CategoryVO, PropertyVO.category_id == CategoryVO.category_id) \
+            .join(LocationVO, PropertyVO.location_id == LocationVO.location_id) \
+            .filter(PropertyVO.property_status == 'sold') \
+            .all()
+        return property_vo_list
+
+    def get_pending_properties(self):
+        property_vo_list = db.session.query(PropertyVO, UserVO, CategoryVO,
+                                            LocationVO) \
+            .join(UserVO, PropertyVO.user_id == UserVO.user_id) \
+            .join(CategoryVO, PropertyVO.category_id == CategoryVO.category_id) \
+            .join(LocationVO, PropertyVO.location_id == LocationVO.location_id) \
+            .filter(PropertyVO.property_status == 'pending') \
+            .all()
         return property_vo_list

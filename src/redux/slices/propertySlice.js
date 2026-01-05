@@ -14,6 +14,22 @@ const getErrorMessage = (err) => {
   return err.message || "An error occurred";
 };
 
+// Helper function to normalize property data
+const normalizeProperty = (item) => ({
+  _id: item.property_id ?? item._id,
+  title: item.property_title ?? item.title,
+  property_title: item.property_title ?? item.title,
+  images: item.property_images ?? item.images ?? [],
+  price: item.price ?? item.property_price,
+  property_price: item.price ?? item.property_price,
+  property_type: item.property_type,
+  category_id: item.category_id,
+  location_id: item.location_id ? { ...item.location_id, city: item.city } : { city: item.city, location_id: item.location_id },
+  status: item.property_status ?? item.status,
+  property_status: item.property_status ?? item.status,
+  raw: item,
+});
+
 // Async thunks
 export const fetchProperties = createAsyncThunk(
   "properties/fetchAll",
@@ -75,11 +91,62 @@ export const deleteProperty = createAsyncThunk(
   }
 );
 
+// Property status async thunks
+export const markPropertyAsSold = createAsyncThunk(
+  "properties/markAsSold",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await propertyService.markPropertySold(id);
+      return { id, ...res.data };
+    } catch (err) {
+      return rejectWithValue(getErrorMessage(err));
+    }
+  }
+);
+
+export const markPropertyAsPending = createAsyncThunk(
+  "properties/markAsPending",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await propertyService.markPropertyPending(id);
+      return { id, ...res.data };
+    } catch (err) {
+      return rejectWithValue(getErrorMessage(err));
+    }
+  }
+);
+
+export const fetchSoldProperties = createAsyncThunk(
+  "properties/fetchSold",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await propertyService.getSoldProperties();
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(getErrorMessage(err));
+    }
+  }
+);
+
+export const fetchPendingProperties = createAsyncThunk(
+  "properties/fetchPending",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await propertyService.getPendingProperties();
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(getErrorMessage(err));
+    }
+  }
+);
+
 const propertySlice = createSlice({
   name: "properties",
   initialState: {
     list: [],
     currentProperty: null,
+    soldProperties: [],
+    pendingProperties: [],
     loading: false,
     error: null,
     totalPages: 0,
@@ -230,6 +297,80 @@ const propertySlice = createSlice({
         state.list = state.list.filter((p) => p._id !== action.payload);
       })
       .addCase(deleteProperty.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Mark as Sold
+      .addCase(markPropertyAsSold.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(markPropertyAsSold.fulfilled, (state, action) => {
+        state.loading = false;
+        const { id } = action.payload;
+        const property = state.list.find((p) => p._id === id);
+        if (property) {
+          property.status = 'sold';
+          property.property_status = 'sold';
+        }
+      })
+      .addCase(markPropertyAsSold.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Mark as Pending
+      .addCase(markPropertyAsPending.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(markPropertyAsPending.fulfilled, (state, action) => {
+        state.loading = false;
+        const { id } = action.payload;
+        const property = state.list.find((p) => p._id === id);
+        if (property) {
+          property.status = 'pending';
+          property.property_status = 'pending';
+        }
+      })
+      .addCase(markPropertyAsPending.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Sold Properties
+      .addCase(fetchSoldProperties.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSoldProperties.fulfilled, (state, action) => {
+        state.loading = false;
+        const payload = action.payload || {};
+        const rawList = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload.data)
+          ? payload.data
+          : [];
+        state.soldProperties = rawList.map(normalizeProperty);
+      })
+      .addCase(fetchSoldProperties.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Pending Properties
+      .addCase(fetchPendingProperties.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPendingProperties.fulfilled, (state, action) => {
+        state.loading = false;
+        const payload = action.payload || {};
+        const rawList = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload.data)
+          ? payload.data
+          : [];
+        state.pendingProperties = rawList.map(normalizeProperty);
+      })
+      .addCase(fetchPendingProperties.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

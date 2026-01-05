@@ -1,9 +1,10 @@
+import React from "react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
 
-export default function AdminLayout({ children }) {
+export default function AdminLayout({ children, title = "Admin Panel", actionButton }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,8 +18,28 @@ export default function AdminLayout({ children }) {
     setMobileSidebarOpen(false);
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+  // Render action button - handle both React elements and object with label/to
+  const renderActionButton = () => {
+    if (!actionButton) return null;
+    
+    // If it's a React element (from page component)
+    if (React.isValidElement(actionButton)) {
+      return actionButton;
+    }
+    
+    // If it's an object with label and to (from App.jsx route config)
+    if (actionButton && typeof actionButton === 'object' && actionButton.label && actionButton.to) {
+      return (
+        <Link
+          to={actionButton.to}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+        >
+          {actionButton.label}
+        </Link>
+      );
+    }
+    
+    return null;
   };
 
   const navItems = [
@@ -54,10 +75,61 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Desktop Sidebar - Hidden on mobile */}
+    <div className="min-h-screen bg-gray-100">
+      {/* Mobile Sidebar Overlay */}
+      {mobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+          onClick={() => setMobileSidebarOpen(false)} 
+        />
+      )}
+
+      {/* Mobile Sidebar - Slides from left */}
+      <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-gray-900 text-white transform transition-transform duration-300 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 h-16">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <span className="text-lg font-bold text-indigo-400">Admin Panel</span>
+          </div>
+          <button 
+            onClick={() => setMobileSidebarOpen(false)} 
+            className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav className="p-4 space-y-1">{navItems.map(renderNavItem)}</nav>
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-bold">{user?.name?.charAt(0) || user?.user_name?.charAt(0) || "A"}</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium truncate">{user?.name || user?.user_name}</p>
+              <p className="text-xs text-gray-400">Administrator</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleLogout} 
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Desktop Sidebar - Fixed on left */}
       <aside className={`hidden lg:flex lg:flex-col bg-gray-900 text-white fixed inset-y-0 left-0 z-30 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'}`}>
-        {/* Header */}
+        {/* Sidebar Header */}
         <div className={`flex items-center gap-2 p-4 border-b border-gray-700 h-16 ${sidebarOpen ? 'justify-start' : 'justify-center'}`}>
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,96 +169,77 @@ export default function AdminLayout({ children }) {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className={`flex-1 flex flex-col min-h-screen w-full transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-
-        {/* Mobile Header - Only visible on small screens */}
-        <header className="lg:hidden bg-white border-b border-gray-200 px-4 h-16 flex items-center justify-between fixed top-0 left-0 right-0 z-20 shadow-sm">
-          <button
-            onClick={() => setMobileSidebarOpen(true)}
-            className="p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      {/* Main Content Wrapper - With proper margin for desktop sidebar */}
+      <div className={`${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'} min-h-screen flex flex-col`}>
+        
+        {/* Admin Header/Navbar - Consistent across all admin pages */}
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between sticky top-0 z-20 px-4 lg:px-6 shadow-sm">
+          <div className="flex items-center gap-4">
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
-            </div>
-            <h1 className="text-lg font-semibold text-gray-900">Admin</h1>
-          </div>
-          <div className="w-10" />
-        </header>
-
-        {/* Desktop Header with Toggle Button - Only visible on large screens */}
-        <header className="hidden lg:flex bg-white border-b border-gray-200 px-4 h-16 items-center justify-between fixed top-0 z-20 shadow-sm" style={{ left: sidebarOpen ? '16rem' : '5rem', right: 0 }}>
-          <button
-            onClick={toggleSidebar}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarOpen ? "M11 19l-7-7 7-7m8 14l-7-7 7-7" : "M13 5l7 7-7 7M5 5l7 7-7 7"} />
-            </svg>
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </button>
+            
+            {/* Desktop Sidebar Toggle */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="hidden lg:flex p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarOpen ? "M11 19l-7-7 7-7m8 14l-7-7 7-7" : "M13 5l7 7-7 7M5 5l7 7-7 7"} />
               </svg>
-            </div>
-            <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
-          </div>
-          <div className="w-10" />
-        </header>
-
-        {/* Mobile Sidebar Overlay */}
-        {mobileSidebarOpen && (
-          <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setMobileSidebarOpen(false)} />
-        )}
-
-        {/* Mobile Sidebar */}
-        <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-gray-900 text-white transform transition-transform duration-300 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="flex items-center justify-between p-4 border-b border-gray-700 h-16">
+            </button>
+            
+            {/* Page Title */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 hidden sm:flex">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <span className="text-lg font-bold text-indigo-400">Admin Panel</span>
+              <h1 className="text-lg font-semibold text-gray-900 hidden sm:block">{title}</h1>
             </div>
-            <button onClick={() => setMobileSidebarOpen(false)} className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
-          <nav className="p-4 space-y-1">{navItems.map(renderNavItem)}</nav>
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold">{user?.name?.charAt(0) || user?.user_name?.charAt(0) || "A"}</span>
+          
+          {/* Action Button (if provided) and Right side - User info and logout */}
+          <div className="flex items-center gap-3">
+            {renderActionButton() && (
+              <div className="hidden sm:block">
+                {renderActionButton()}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{user?.name || user?.user_name}</p>
-                <p className="text-xs text-gray-400">Administrator</p>
+            )}
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold text-white">{user?.name?.charAt(0) || user?.user_name?.charAt(0) || "A"}</span>
               </div>
+              <span className="text-sm text-gray-700">{user?.name || user?.user_name}</span>
             </div>
-            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
-        </aside>
+        </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full" style={{ paddingTop: '5rem' }}>
-          <div className="max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Mobile action button */}
+            {renderActionButton() && (
+              <div className="sm:hidden mb-4">
+                {renderActionButton()}
+              </div>
+            )}
             {children}
           </div>
         </main>

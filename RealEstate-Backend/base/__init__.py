@@ -3,7 +3,7 @@ import warnings
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, send_from_directory
+from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
@@ -48,10 +48,3 @@ except Exception as e:
     print(f"Error during admin setup: {e}")
 
 from base.com import controller
-
-
-# Serve static files (property images, profile pictures)
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    """Serve static files from base/static directory"""
-    return send_from_directory(os.path.join(os.path.dirname(__file), 'static'), filename)

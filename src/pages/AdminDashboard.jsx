@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProperties } from "../redux/slices/propertySlice";
+import { fetchProperties, fetchSoldProperties, fetchPendingProperties } from "../redux/slices/propertySlice";
 import { fetchAppointments } from "../redux/slices/appointmentSlice";
 import { fetchCategories } from "../redux/slices/categorySlice";
 import { fetchLocations } from "../redux/slices/locationSlice";
@@ -9,7 +9,7 @@ import { fetchLocations } from "../redux/slices/locationSlice";
 export default function AdminDashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { list: properties } = useSelector((state) => state.properties);
+  const { list: properties, soldProperties, pendingProperties } = useSelector((state) => state.properties);
   const { list: appointments } = useSelector((state) => state.appointments);
   const { list: categories } = useSelector((state) => state.categories);
   const { list: locations } = useSelector((state) => state.locations);
@@ -23,6 +23,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     dispatch(fetchProperties({}));
+    dispatch(fetchSoldProperties());
+    dispatch(fetchPendingProperties());
     dispatch(fetchAppointments());
     dispatch(fetchCategories());
     dispatch(fetchLocations());
@@ -43,7 +45,7 @@ export default function AdminDashboard() {
     },
     { 
       label: "Sold", 
-      value: propertiesList.filter((p) => p.status === "sold").length, 
+      value: Array.isArray(soldProperties) ? soldProperties.length : 0, 
       color: "bg-red-500",
       icon: "M6 18L18 6M6 6l12 12"
     },
@@ -55,7 +57,7 @@ export default function AdminDashboard() {
     },
     { 
       label: "Pending", 
-      value: appointmentsList.filter((a) => a.status === "pending").length, 
+      value: Array.isArray(pendingProperties) ? pendingProperties.length : 0, 
       color: "bg-yellow-500",
       icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
     },
