@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import { useDispatch, useSelector } from "react-redux";
 import { 
-  fetchProperties, 
-  deleteProperty, 
+  fetchProperties,
   markPropertyAsSold, 
   markPropertyAsPending,
   updateProperty,
@@ -112,10 +111,7 @@ export default function AdminProperties() {
     );
   };
 
-  const handleDelete = (id) => {
-    if (!confirm("Are you sure you want to delete this property?")) return;
-    dispatch(deleteProperty(id));
-  };
+
 
   const handleStatusChange = (property, newStatus) => {
     const propertyId = property._id || property.property_id;
@@ -260,12 +256,7 @@ export default function AdminProperties() {
             >
               View
             </Link>
-            <button
-              onClick={() => handleDelete(propId)}
-              className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors font-medium"
-            >
-              Delete
-            </button>
+          
           </div>
         </div>
       </div>
@@ -387,12 +378,7 @@ export default function AdminProperties() {
                       >
                         View
                       </Link>
-                      <button
-                        onClick={() => handleDelete(property._id)}
-                        className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors font-medium"
-                      >
-                        Delete
-                      </button>
+                     
                     </div>
                   </td>
                 </tr>
