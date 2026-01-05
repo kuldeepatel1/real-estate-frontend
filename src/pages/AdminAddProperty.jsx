@@ -113,8 +113,16 @@ export default function AdminAddProperty() {
   const onSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData();
+    
+    // Debug: Log files before appending
+    console.log("Images files:", form.imagesFiles);
+    console.log("Number of files:", form.imagesFiles?.length || 0);
+    
     if (form.imagesFiles && form.imagesFiles.length > 0) {
-      form.imagesFiles.forEach((file) => fd.append('property_images', file));
+      form.imagesFiles.forEach((file, index) => {
+        console.log(`File ${index}:`, file.name, file.size, file.type);
+        fd.append('property_images', file);
+      });
     }
     fd.append('property_title', form.title || '');
     fd.append('property_description', form.description || '');

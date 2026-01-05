@@ -1,6 +1,8 @@
 import api from "./api";
 
 // Property CRUD endpoints
+// Note: We don't set Content-Type header explicitly for multipart/form-data
+// because axios automatically sets it with the correct boundary when using FormData
 export const addProperty = (data) => api.post("/api/properties", data);
 export const getAllProperties = (params) => api.get("/api/properties", { params });
 export const getPropertyById = (id) => api.get(`/api/properties/${id}`);
