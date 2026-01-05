@@ -378,7 +378,7 @@ export default function AdminProperties() {
                         <option value="pending">Pending</option>
                         <option value="available">Available</option>
                         <option value="sold">Sold</option>
-                        <option value="rented">Rented</option>
+                        {/* <option value="rented">Rented</option> */}
                       </select>
                     </div>
                   </td>

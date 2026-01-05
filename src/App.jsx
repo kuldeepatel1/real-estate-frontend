@@ -136,6 +136,18 @@ function App() {
           }
         />
 
+        {/* Route alias for add-property */}
+        <Route
+          path="/admin/add-property"
+          element={
+            <AdminLayout title="Add Property">
+              <ProtectedRoute requiredRole="admin">
+                <AdminAddProperty />
+              </ProtectedRoute>
+            </AdminLayout>
+          }
+        />
+
         <Route
           path="/admin/appointments"
           element={

@@ -142,18 +142,18 @@ export default function AdminAddProperty() {
       }
       if (finalLocId != null) fd.append('location_id', String(finalLocId));
     }
-    fd.append('property_status', form.status || 'pending');
+    fd.append('property_status', form.status || 'available');
     fd.append('bedrooms', String(form.bedrooms || '0'));
     fd.append('bathrooms', String(form.bathrooms || '0'));
     fd.append('area_sqft', String(form.area_sqft || '0'));
     fd.append('address', form.address || '');
     if (form.year_built) fd.append('year_built', String(form.year_built));
     if (form.parking_spots) fd.append('parking_spots', String(form.parking_spots));
-    fd.append('has_garden', form.has_garden ? '1' : '0');
-    fd.append('has_pool', form.has_pool ? '1' : '0');
-    fd.append('pet_friendly', form.pet_friendly ? '1' : '0');
-    fd.append('furnished', form.furnished ? '1' : '0');
-    fd.append('is_featured', form.is_featured ? '1' : '0');
+    fd.append('has_garden', String(form.has_garden));
+    fd.append('has_pool', String(form.has_pool));
+    fd.append('pet_friendly', String(form.pet_friendly));
+    fd.append('furnished', String(form.furnished));
+    fd.append('is_featured', String(form.is_featured));
 
     const res = await dispatch(createProperty(fd));
     if (res.error) {
