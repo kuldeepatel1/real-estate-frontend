@@ -23,10 +23,28 @@ const normalizeProperty = (item) => ({
   price: item.price ?? item.property_price,
   property_price: item.price ?? item.property_price,
   property_type: item.property_type,
+  property_description: item.property_description ?? item.description,
+  description: item.property_description ?? item.description,
   category_id: item.category_id,
+  // Preserve location data from backend response
   location_id: item.location_id ? { ...item.location_id, city: item.city } : { city: item.city, location_id: item.location_id },
+  // Preserve location_name and city from backend (top-level fields)
+  location_name: item.location_name,
+  city: item.city,
   status: item.property_status ?? item.status,
   property_status: item.property_status ?? item.status,
+  // Additional fields needed for View modal
+  year_built: item.year_built,
+  address: item.address,
+  bedrooms: item.bedrooms,
+  bathrooms: item.bathrooms,
+  area_sqft: item.area_sqft,
+  parking_spots: item.parking_spots,
+  has_garden: item.has_garden,
+  has_pool: item.has_pool,
+  pet_friendly: item.pet_friendly,
+  furnished: item.furnished,
+  is_featured: item.is_featured,
   raw: item,
 });
 
@@ -199,9 +217,27 @@ const propertySlice = createSlice({
           price: item.price ?? item.property_price,
           property_price: item.price ?? item.property_price,
           property_type: item.property_type,
+          property_description: item.property_description ?? item.description,
+          description: item.property_description ?? item.description,
           category_id: item.category_id,
           location_id: item.location_id ? { ...item.location_id, city: item.city } : { city: item.city, location_id: item.location_id },
+          // Preserve location_name and city from backend (top-level fields)
+          location_name: item.location_name,
+          city: item.city,
           status: item.property_status ?? item.status,
+          property_status: item.property_status ?? item.status,
+          // Additional fields needed for View modal
+          year_built: item.year_built,
+          address: item.address,
+          bedrooms: item.bedrooms,
+          bathrooms: item.bathrooms,
+          area_sqft: item.area_sqft,
+          parking_spots: item.parking_spots,
+          has_garden: item.has_garden,
+          has_pool: item.has_pool,
+          pet_friendly: item.pet_friendly,
+          furnished: item.furnished,
+          is_featured: item.is_featured,
           raw: item,
         }));
 
@@ -234,19 +270,49 @@ const propertySlice = createSlice({
           };
         }
         
+        // Normalize location - handle both integer ID and location details
+        let normalizedLocationId = item.location_id;
+        if (typeof item.location_id === 'object' && item.location_id !== null) {
+          normalizedLocationId = item.location_id;
+        } else {
+          // Create location object with all available fields from backend
+          normalizedLocationId = {
+            location_id: item.location_id,
+            location_name: item.location_name,
+            city: item.city,
+            address: item.address || item.location_id?.address
+          };
+        }
+        
         state.currentProperty = {
           _id: item.property_id ?? item._id,
           title: item.property_title ?? item.title,
           property_title: item.property_title ?? item.title,
+          description: item.property_description ?? item.description,
+          property_description: item.property_description ?? item.description,
           images: item.property_images ?? item.images ?? [],
           price: item.price ?? item.property_price,
           property_price: item.price ?? item.property_price,
           property_type: item.property_type,
           category_id: normalizedCategoryId,
           category_name: item.category_name,
-          location_id: item.location_id ? { ...item.location_id, city: item.city } : { city: item.city, location_id: item.location_id },
+          location_id: normalizedLocationId,
+          city: item.city, // Also keep city as top-level for easy access
           status: item.property_status ?? item.status,
+          property_status: item.property_status ?? item.status,
           user_id: item.user_id,
+          // Additional fields needed for PropertyDetails page
+          year_built: item.year_built,
+          address: item.address,
+          bedrooms: item.bedrooms,
+          bathrooms: item.bathrooms,
+          area_sqft: item.area_sqft,
+          parking_spots: item.parking_spots,
+          has_garden: item.has_garden,
+          has_pool: item.has_pool,
+          pet_friendly: item.pet_friendly,
+          furnished: item.furnished,
+          is_featured: item.is_featured,
           raw: item,
         };
       })

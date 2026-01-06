@@ -199,74 +199,158 @@ export default function AdminUsers() {
 
       {/* User Detail Modal */}
       {showModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">User Details</h3>
-            </div>
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <span className="text-indigo-600 font-bold text-xl">
-                    {selectedUser.user_name?.charAt(0) || selectedUser.name?.charAt(0) || "U"}
-                  </span>
-                </div>
-                <div>
-                  <h4 className="text-xl font-semibold text-gray-900">
-                    {selectedUser.user_name || selectedUser.name}
-                  </h4>
-                  <p className="text-gray-500">{selectedUser.user_email || selectedUser.email}</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500">Role</span>
-                  <span className="font-medium text-gray-900">
-                    {(selectedUser.user_role || selectedUser.role) || "user"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500">Status</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getUserStatus(selectedUser).className}`}>
-                    {getUserStatus(selectedUser).text}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500">Phone</span>
-                  <span className="font-medium text-gray-900">
-                    {selectedUser.user_phone || selectedUser.phone || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500">Address</span>
-                  <span className="font-medium text-gray-900 text-right max-w-xs">
-                    {selectedUser.user_address || selectedUser.address || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500">Verified</span>
-                  <span className={`font-medium ${selectedUser.is_verified ? "text-green-600" : "text-yellow-600"}`}>
-                    {selectedUser.is_verified ? "Yes" : "No"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-gray-500">Active</span>
-                  <span className={`font-medium ${selectedUser.is_active ? "text-green-600" : "text-red-600"}`}>
-                    {selectedUser.is_active ? "Yes" : "No"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-500">Joined</span>
-                  <span className="font-medium text-gray-900">
-                    {selectedUser.created_date ? new Date(selectedUser.created_date).toLocaleDateString() : "N/A"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-gray-900/30 backdrop-blur-sm" onClick={closeModal}></div>
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden border border-gray-200 relative z-10">
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+              <h3 className="text-base font-semibold text-gray-900">User Details</h3>
               <button
                 onClick={closeModal}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-5">
+              {/* User Info Header */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <span className="text-indigo-600 font-bold text-lg">
+                    {(selectedUser.user_name || selectedUser.name)?.charAt(0) || "U"}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900 truncate">
+                    {selectedUser.user_name || selectedUser.name || "N/A"}
+                  </h4>
+                  <p className="text-sm text-gray-500 truncate">{selectedUser.user_email || selectedUser.email}</p>
+                </div>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getUserStatus(selectedUser).className}`}>
+                  {getUserStatus(selectedUser).text}
+                </span>
+              </div>
+
+              {/* Form Fields */}
+              <div className="space-y-3">
+                {/* Row 1 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Full Name</label>
+                    <input 
+                      type="text" 
+                      value={selectedUser.user_name || selectedUser.name || ""} 
+                      readOnly 
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-700 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
+                    <input 
+                      type="text" 
+                      value={selectedUser.user_email || selectedUser.email || ""} 
+                      readOnly 
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-700 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 2 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Phone</label>
+                    <input 
+                      type="text" 
+                      value={selectedUser.user_phone || selectedUser.phone || "N/A"} 
+                      readOnly 
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-700 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Role</label>
+                    <input 
+                      type="text" 
+                      value={(selectedUser.user_role || selectedUser.role) || "user"} 
+                      readOnly 
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-700 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3 */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                    <input 
+                      type="text" 
+                      value={getUserStatus(selectedUser).text} 
+                      readOnly 
+                      className={`w-full border border-gray-200 rounded-md px-3 py-2 text-sm cursor-not-allowed ${
+                        getUserStatus(selectedUser).text === "Active" 
+                          ? "bg-green-50 text-green-700" 
+                          : "bg-red-50 text-red-700"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Verified</label>
+                    <input 
+                      type="text" 
+                      value={selectedUser.is_verified ? "Yes" : "No"} 
+                      readOnly 
+                      className={`w-full border border-gray-200 rounded-md px-3 py-2 text-sm cursor-not-allowed ${
+                        selectedUser.is_verified 
+                          ? "bg-green-50 text-green-700" 
+                          : "bg-yellow-50 text-yellow-700"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Active</label>
+                    <input 
+                      type="text" 
+                      value={selectedUser.is_active ? "Yes" : "No"} 
+                      readOnly 
+                      className={`w-full border border-gray-200 rounded-md px-3 py-2 text-sm cursor-not-allowed ${
+                        selectedUser.is_active 
+                          ? "bg-green-50 text-green-700" 
+                          : "bg-red-50 text-red-700"
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Address</label>
+                  <textarea 
+                    value={selectedUser.user_address || selectedUser.address || "N/A"} 
+                    readOnly 
+                    rows={2}
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-700 cursor-not-allowed resize-none"
+                  />
+                </div>
+
+                {/* Joined Date */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Joined Date</label>
+                  <input 
+                    type="text" 
+                    value={selectedUser.created_date ? new Date(selectedUser.created_date).toLocaleDateString() : "N/A"} 
+                    readOnly 
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-700 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors text-sm font-medium"
               >
                 Close
               </button>

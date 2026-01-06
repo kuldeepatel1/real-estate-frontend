@@ -6,6 +6,7 @@ import { fetchReviewsByProperty, clearReviews } from "../redux/slices/reviewSlic
 import { fetchFavorites } from "../redux/slices/favoriteSlice";
 import { addToFavorites, removeFromFavorites } from "../redux/slices/favoriteSlice";
 import { fetchCategories } from "../redux/slices/categorySlice";
+import { fetchLocations } from "../redux/slices/locationSlice";
 import PropertyCard from "../components/PropertyCard";
 import AppointmentModal from "../components/AppointmentModal";
 import ReviewForm from "../components/ReviewForm";
@@ -19,6 +20,7 @@ export default function PropertyDetails() {
   const { list: favorites } = useSelector((state) => state.favorites);
   const { user, token } = useSelector((state) => state.auth);
   const { list: categories } = useSelector((state) => state.categories);
+  const { list: locations } = useSelector((state) => state.locations);
 
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -30,6 +32,7 @@ export default function PropertyDetails() {
     dispatch(fetchPropertyById(id));
     dispatch(fetchReviewsByProperty(id));
     dispatch(fetchCategories());
+    dispatch(fetchLocations());
     if (token) dispatch(fetchFavorites());
 
     return () => {
@@ -69,6 +72,50 @@ export default function PropertyDetails() {
     if (reviews.length === 0) return 0;
     const sum = reviews.reduce((acc, r) => acc + (r.review_rating || r.rating || 0), 0);
     return (sum / reviews.length).toFixed(1);
+  };
+
+  // Helper function to get location display string
+  // Prioritizes location_name from the property data
+  const getLocationDisplay = () => {
+    // Check top-level location_name first (most specific)
+    if (property.location_name && property.location_name.trim()) {
+      return property.location_name;
+    }
+
+    // Check top-level city as fallback
+    if (property.city && property.city.trim()) {
+      return property.city;
+    }
+
+    // Check location_id object (in case backend returned nested location)
+    if (property.location_id) {
+      // Handle case where location_id is an object with location_name
+      if (typeof property.location_id === 'object' && property.location_id !== null) {
+        if (property.location_id.location_name && property.location_id.location_name.trim()) {
+          return property.location_id.location_name;
+        }
+        if (property.location_id.city && property.location_id.city.trim()) {
+          return property.location_id.city;
+        }
+      }
+      // Handle case where location_id is just a string/ID - look up in Redux store
+      if (typeof property.location_id === 'string' && property.location_id.trim()) {
+        const location = locations.find(
+          (l) => l._id === property.location_id || l.id === property.location_id || l.location_id === property.location_id
+        );
+        if (location) {
+          return location.location_name || location.city || location.name || property.location_id;
+        }
+        return property.location_id;
+      }
+    }
+
+    // Fallback to address if available
+    if (property.address && property.address.trim()) {
+      return property.address;
+    }
+
+    return "Location not specified";
   };
 
   // Helper function to get category name from category_id
@@ -198,7 +245,7 @@ export default function PropertyDetails() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    {property.location_id?.city || "Location not specified"}
+                    {getLocationDisplay()}
                   </p>
                 </div>
                 <div className="text-right">
@@ -247,8 +294,84 @@ export default function PropertyDetails() {
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-3">Description</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  {property.description || property.property_description}
+                  {property.description || property.property_description || "N/A"}
                 </p>
+              </div>
+
+              {/* Address & Additional Details */}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-3">Property Details</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Address</p>
+                      <p className="text-gray-800 font-medium">
+                        {property.address || 
+                         property.location_id?.address || 
+                         property.location_id?.full_address ||
+                         property.location_id?.street_address ||
+                         "Location not specified"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Year Built</p>
+                      <p className="text-gray-800 font-medium">{property.year_built || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Bedrooms</p>
+                      <p className="text-gray-800 font-medium">{property.bedrooms || "0"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Bathrooms</p>
+                      <p className="text-gray-800 font-medium">{property.bathrooms || "0"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Area (sqft)</p>
+                      <p className="text-gray-800 font-medium">{property.area_sqft || "0"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Parking Spots</p>
+                      <p className="text-gray-800 font-medium">{property.parking_spots || "0"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Amenities */}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-3">Amenities</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {property.has_garden && (
+                    <div className="px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700">
+                      Garden
+                    </div>
+                  )}
+                  {property.has_pool && (
+                    <div className="px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700">
+                      Pool
+                    </div>
+                  )}
+                  {property.pet_friendly && (
+                    <div className="px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700">
+                      Pet Friendly
+                    </div>
+                  )}
+                  {property.furnished && (
+                    <div className="px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700">
+                      Furnished
+                    </div>
+                  )}
+                  {property.parking_spots > 0 && (
+                    <div className="px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700">
+                      Parking
+                    </div>
+                  )}
+                  {property.is_featured && (
+                    <div className="px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700">
+                      Featured
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

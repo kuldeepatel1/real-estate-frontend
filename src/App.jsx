@@ -18,7 +18,9 @@ import AdminProperties from "./pages/AdminProperties";
 import AdminAddProperty from "./pages/AdminAddProperty";
 import AdminAppointments from "./pages/AdminAppointments";
 import AdminCategories from "./pages/AdminCategories";
+import AdminAddCategory from "./pages/AdminAddCategory";
 import AdminLocations from "./pages/AdminLocations";
+import AdminAddLocation from "./pages/AdminAddLocation";
 import AdminReviews from "./pages/AdminReviews";
 
 // Layouts & Components
@@ -171,11 +173,55 @@ function App() {
         />
 
         <Route
+          path="/admin/categories/add"
+          element={
+            <AdminLayout title="Add Category">
+              <ProtectedRoute requiredRole="admin">
+                <AdminAddCategory />
+              </ProtectedRoute>
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/admin/categories/edit/:id"
+          element={
+            <AdminLayout title="Edit Category">
+              <ProtectedRoute requiredRole="admin">
+                <AdminAddCategory />
+              </ProtectedRoute>
+            </AdminLayout>
+          }
+        />
+
+        <Route
           path="/admin/locations"
           element={
             <AdminLayout title="Locations">
               <ProtectedRoute requiredRole="admin">
                 <AdminLocations />
+              </ProtectedRoute>
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/admin/locations/add"
+          element={
+            <AdminLayout title="Add Location">
+              <ProtectedRoute requiredRole="admin">
+                <AdminAddLocation />
+              </ProtectedRoute>
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/admin/locations/edit/:id"
+          element={
+            <AdminLayout title="Edit Location">
+              <ProtectedRoute requiredRole="admin">
+                <AdminAddLocation />
               </ProtectedRoute>
             </AdminLayout>
           }
