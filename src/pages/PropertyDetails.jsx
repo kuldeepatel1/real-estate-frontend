@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPropertyById, clearCurrentProperty } from "../redux/slices/propertySlice";
 import { fetchReviewsByProperty, clearReviews } from "../redux/slices/reviewSlice";
@@ -8,12 +8,12 @@ import { addToFavorites, removeFromFavorites } from "../redux/slices/favoriteSli
 import { fetchCategories } from "../redux/slices/categorySlice";
 import { fetchLocations } from "../redux/slices/locationSlice";
 import PropertyCard from "../components/PropertyCard";
-import AppointmentModal from "../components/AppointmentModal";
 import ReviewForm from "../components/ReviewForm";
 import { getAllImageUrls, hasImages } from "../utils/imageHelper";
 
 export default function PropertyDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentProperty: property, loading } = useSelector((state) => state.properties);
   const { list: reviews, loading: reviewsLoading } = useSelector((state) => state.reviews);
@@ -22,7 +22,6 @@ export default function PropertyDetails() {
   const { list: categories } = useSelector((state) => state.categories);
   const { list: locations } = useSelector((state) => state.locations);
 
-  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState({});
   useEffect(() => {
@@ -434,14 +433,14 @@ export default function PropertyDetails() {
             <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
               <h3 className="text-lg font-semibold mb-4">Interested in this property?</h3>
               <button
-                onClick={() => setShowAppointmentModal(true)}
-                className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition mb-3"
+                onClick={() => navigate("/book-appointment", { state: { property } })}
+                className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition mb-3 flex items-center justify-center gap-2"
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
                 Book a Visit
               </button>
-              {/* <button className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition">
-                Contact Agent
-              </button> */}
 
               {/* Property Agent Info */}
               <div className="mt-6 pt-6 border-t border-gray-100">
@@ -465,11 +464,6 @@ export default function PropertyDetails() {
           </div>
         </div>
       </div>
-
-      {/* Appointment Modal */}
-      {showAppointmentModal && (
-        <AppointmentModal property={property} onClose={() => setShowAppointmentModal(false)} />
-      )}
     </div>
   );
 }

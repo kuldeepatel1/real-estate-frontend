@@ -9,6 +9,7 @@ import PropertyList from "./pages/PropertyList";
 import PropertyDetails from "./pages/PropertyDetails";
 import Dashboard from "./pages/Dashboard";
 import Favorites from "./pages/Favorites";
+import BookAppointment from "./pages/BookAppointment";
 import NotFound from "./pages/NotFound";
 
 // Admin Pages
@@ -85,6 +86,17 @@ function App() {
             <UserLayout>
               <ProtectedRoute>
                 <Favorites />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path="/book-appointment"
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <BookAppointment />
               </ProtectedRoute>
             </UserLayout>
           }

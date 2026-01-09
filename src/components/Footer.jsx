@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export default function Footer() {
+  const { list: categories } = useSelector((state) => state.categories);
+  const categoriesList = Array.isArray(categories) ? categories : [];
+
   return (
     <footer className="bg-gray-900 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,10 +32,25 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Property Types</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><Link to="/properties?type=apartment" className="hover:text-white transition">Apartments</Link></li>
-              <li><Link to="/properties?type=house" className="hover:text-white transition">Houses</Link></li>
-              <li><Link to="/properties?type=villa" className="hover:text-white transition">Villas</Link></li>
-              <li><Link to="/properties?type=plot" className="hover:text-white transition">Plots</Link></li>
+              {categoriesList.length > 0 ? (
+                categoriesList.map((cat) => (
+                  <li key={cat.category_id}>
+                    <Link 
+                      to={`/properties?category=${cat.category_id}`} 
+                      className="hover:text-white transition"
+                    >
+                      {cat.category_name}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <>
+                  <li><Link to="/properties?category=1" className="hover:text-white transition">Apartments</Link></li>
+                  <li><Link to="/properties?category=2" className="hover:text-white transition">Houses</Link></li>
+                  <li><Link to="/properties?category=3" className="hover:text-white transition">Villas</Link></li>
+                  <li><Link to="/properties?category=4" className="hover:text-white transition">Plots</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
