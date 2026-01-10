@@ -23,8 +23,8 @@ export default function Footer() {
             <ul className="space-y-2 text-gray-400 text-sm">
               <li><Link to="/" className="hover:text-white transition">Home</Link></li>
               <li><Link to="/properties" className="hover:text-white transition">Properties</Link></li>
-              <li><Link to="/about" className="hover:text-white transition">About Us</Link></li>
-              <li><Link to="/contact" className="hover:text-white transition">Contact</Link></li>
+              <li><Link to="/Dashboard" className="hover:text-white transition">Dashboard</Link></li>
+              <li><Link to="/Favorites" className="hover:text-white transition">Favorites</Link></li>
             </ul>
           </div>
 
@@ -45,10 +45,10 @@ export default function Footer() {
                 ))
               ) : (
                 <>
-                  <li><Link to="/properties?category=1" className="hover:text-white transition">Apartments</Link></li>
-                  <li><Link to="/properties?category=2" className="hover:text-white transition">Houses</Link></li>
-                  <li><Link to="/properties?category=3" className="hover:text-white transition">Villas</Link></li>
-                  <li><Link to="/properties?category=4" className="hover:text-white transition">Plots</Link></li>
+                  <li><Link to="/properties?category=3" className="hover:text-white transition">Residential</Link></li>
+                  <li><Link to="/properties?category=5" className="hover:text-white transition">Commercial</Link></li>
+                  <li><Link to="/properties?category=7" className="hover:text-white transition">Land</Link></li>
+                  <li><Link to="/properties?category=8" className="hover:text-white transition">Luxury</Link></li>
                 </>
               )}
             </ul>
