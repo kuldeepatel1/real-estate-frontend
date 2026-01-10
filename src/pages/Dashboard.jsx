@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFavorites } from "../redux/slices/favoriteSlice";
 import { fetchAppointments } from "../redux/slices/appointmentSlice";
@@ -10,7 +10,7 @@ export default function Dashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { user, loading, token } = useSelector((state) => state.auth);
+  const { user, token } = useSelector((state) => state.auth);
   const { list: favorites } = useSelector((state) => state.favorites);
   const { list: appointments } = useSelector((state) => state.appointments);
 
@@ -19,27 +19,10 @@ export default function Dashboard() {
   const appointmentsList = Array.isArray(appointments) ? appointments : [];
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [showEditProfile, setShowEditProfile] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
-useEffect(() => {
+
+  useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  /* ---------------- PREFILL PROFILE FORM ---------------- */
-  useEffect(() => {
-    if (user) {
-      setEditForm({
-        name: user.name || user.user_name || "",
-        email: user.email || user.user_email || "",
-        phone: user.phone || user.user_mobile || "",
-        address: user.address || user.user_address || "",
-      });
-    }
-  }, [user]);
 
   /* ---------------- FETCH DATA ---------------- */
   useEffect(() => {
@@ -53,23 +36,6 @@ useEffect(() => {
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
-  };
-
-  /* ---------------- UPDATE PROFILE ---------------- */
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
-
-    const payload = {
-      user_name: editForm.name,
-      user_email: editForm.email,
-      user_mobile: editForm.phone,
-      user_address: editForm.address,
-    };
-
-    const res = await dispatch(updateUserProfile(payload));
-    if (res.meta.requestStatus === "fulfilled") {
-      setShowEditProfile(false);
-    }
   };
 
   const userAppointments = appointmentsList.filter(
@@ -99,7 +65,7 @@ useEffect(() => {
             </div>
             <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <button
-                onClick={() => setShowEditProfile(true)}
+                onClick={() => navigate("/edit-profile")}
                 className="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
               >
                 Edit Profile
@@ -252,66 +218,6 @@ useEffect(() => {
           </div>
         </div>
       </div>
-
-      {/* EDIT PROFILE MODAL */}
-      {showEditProfile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Edit Profile</h3>
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <input
-                className="w-full border p-3 rounded-lg"
-                value={editForm.name}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, name: e.target.value })
-                }
-                placeholder="Name"
-              />
-              <input
-                className="w-full border p-3 rounded-lg"
-                value={editForm.email}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, email: e.target.value })
-                }
-                placeholder="Email"
-              />
-              <input
-                className="w-full border p-3 rounded-lg"
-                value={editForm.phone}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, phone: e.target.value })
-                }
-                placeholder="Phone"
-              />
-              <textarea
-                className="w-full border p-3 rounded-lg"
-                value={editForm.address}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, address: e.target.value })
-                }
-                placeholder="Address"
-                rows={3}
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEditProfile(false)}
-                  className="w-1/2 border rounded-lg p-3 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-1/2 bg-indigo-600 text-white rounded-lg p-3 hover:bg-indigo-700 disabled:opacity-50"
-                >
-                  {loading ? "Saving..." : "Save"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

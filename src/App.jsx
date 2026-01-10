@@ -8,6 +8,7 @@ import AdminLogin from "./pages/AdminLogin";
 import PropertyList from "./pages/PropertyList";
 import PropertyDetails from "./pages/PropertyDetails";
 import Dashboard from "./pages/Dashboard";
+import EditProfile from "./pages/EditProfile";
 import Favorites from "./pages/Favorites";
 import BookAppointment from "./pages/BookAppointment";
 import NotFound from "./pages/NotFound";
@@ -97,6 +98,17 @@ function App() {
             <UserLayout>
               <ProtectedRoute>
                 <BookAppointment />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path="/edit-profile"
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <EditProfile />
               </ProtectedRoute>
             </UserLayout>
           }
