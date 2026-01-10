@@ -24,7 +24,6 @@ class PropertyDAO:
             .join(CategoryVO, PropertyVO.category_id == CategoryVO.category_id) \
             .join(LocationVO, PropertyVO.location_id == LocationVO.location_id) \
             .filter(PropertyVO.is_approved == True) \
-            .filter(PropertyVO.property_status != 'sold') \
             .all()
         return property_vo_list
 

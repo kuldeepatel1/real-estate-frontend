@@ -119,20 +119,13 @@ def get_all_properties():
 @app.route('/api/properties/<int:property_id>', methods=['GET'])
 def get_property(property_id):
     try:
-        # Get property with joined category and location data
-        property_data = PropertyDAO().get_property_with_details(property_id)
-        if not property_data:
+        property_vo = PropertyDAO().get_property_by_id(property_id)
+        if not property_vo:
             return jsonify(format_response('error', 'Property not found')), 404
 
-        property_vo, category_vo, location_vo = property_data
-        
         item = property_vo.as_dict()
         item["property_images"] = format_property_images(
             item.get("property_images"), folder_name)
-        # Add category and location details
-        item["category_name"] = category_vo.category_name
-        item["location_name"] = location_vo.location_name
-        item["city"] = location_vo.city
         return jsonify(
             format_response('success', 'Property retrieved', item)), 200
 
@@ -156,6 +149,104 @@ def get_my_properties(current_user):
 
         return jsonify(
             format_response('success', 'My properties', result)), 200
+
+    except Exception as e:
+        return jsonify(format_response('error', str(e))), 500
+
+
+@app.route('/api/properties/<int:property_id>/sold', methods=['PUT'])
+@token_required
+def mark_property_sold(current_user, property_id):
+    try:
+        property_dao = PropertyDAO()
+        property_vo = property_dao.get_property_by_id(property_id)
+
+        if not property_vo:
+            return jsonify(format_response('error', 'Property not found')), 404
+
+        # Only owner or admin can mark as sold
+        if property_vo.user_id != current_user['user_id'] and current_user['user_role'] != 'admin':
+            return jsonify(format_response('error', 'Unauthorized')), 403
+
+        success = property_dao.mark_property_sold(property_id)
+        if success:
+            return jsonify(format_response('success', 'Property marked as sold')), 200
+        else:
+            return jsonify(format_response('error', 'Failed to mark property as sold')), 500
+
+    except Exception as e:
+        return jsonify(format_response('error', str(e))), 500
+
+
+@app.route('/api/properties/<int:property_id>/pending', methods=['PUT'])
+@token_required
+def mark_property_pending(current_user, property_id):
+    try:
+        property_dao = PropertyDAO()
+        property_vo = property_dao.get_property_by_id(property_id)
+
+        if not property_vo:
+            return jsonify(format_response('error', 'Property not found')), 404
+
+        # Only owner or admin can mark as pending
+        if property_vo.user_id != current_user['user_id'] and current_user['user_role'] != 'admin':
+            return jsonify(format_response('error', 'Unauthorized')), 403
+
+        success = property_dao.mark_property_pending(property_id)
+        if success:
+            return jsonify(format_response('success', 'Property marked as pending')), 200
+        else:
+            return jsonify(format_response('error', 'Failed to mark property as pending')), 500
+
+    except Exception as e:
+        return jsonify(format_response('error', str(e))), 500
+
+
+@app.route('/api/properties/sold', methods=['GET'])
+@token_required
+def get_sold_properties(current_user):
+    try:
+        property_dao = PropertyDAO()
+        properties = property_dao.get_sold_properties()
+        result = []
+
+        for property_vo, user_vo, category_vo, location_vo in properties:
+            item = property_vo.as_dict()
+            item["property_images"] = format_property_images(
+                item.get("property_images"), folder_name)
+            item["user_name"] = user_vo.user_name
+            item["category_name"] = category_vo.category_name
+            item["location_name"] = location_vo.location_name
+            item["city"] = location_vo.city
+            result.append(item)
+
+        return jsonify(
+            format_response('success', 'Sold properties', result)), 200
+
+    except Exception as e:
+        return jsonify(format_response('error', str(e))), 500
+
+
+@app.route('/api/properties/pending-status', methods=['GET'])
+@token_required
+def get_pending_status_properties(current_user):
+    try:
+        property_dao = PropertyDAO()
+        properties = property_dao.get_pending_properties()
+        result = []
+
+        for property_vo, user_vo, category_vo, location_vo in properties:
+            item = property_vo.as_dict()
+            item["property_images"] = format_property_images(
+                item.get("property_images"), folder_name)
+            item["user_name"] = user_vo.user_name
+            item["category_name"] = category_vo.category_name
+            item["location_name"] = location_vo.location_name
+            item["city"] = location_vo.city
+            result.append(item)
+
+        return jsonify(
+            format_response('success', 'Pending status properties', result)), 200
 
     except Exception as e:
         return jsonify(format_response('error', str(e))), 500
