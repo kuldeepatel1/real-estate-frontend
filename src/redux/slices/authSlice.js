@@ -93,10 +93,20 @@ export const fetchProfile = createAsyncThunk(
 
 export const updateUserProfile = createAsyncThunk(
   "auth/updateProfile",
-  async (data, { rejectWithValue }) => {
+  async (data, { rejectWithValue, getState }) => {
     try {
       const res = await updateProfile(data);
-      return normalizeUserData(res.data);
+      // Get current user from state to preserve email and other fields
+      const currentUser = getState().auth.user;
+      // Merge current user data with updated data to preserve email
+      const mergedData = {
+        ...currentUser,
+        ...data,
+        user_name: data.user_name,
+        user_phone: data.user_phone,
+        user_address: data.user_address,
+      };
+      return normalizeUserData(mergedData);
     } catch (err) {
       return rejectWithValue(getErrorMessage(err));
     }
@@ -172,6 +182,24 @@ const authSlice = createSlice({
         try {
           console.debug("authSlice: loginUser.rejected:", action.payload);
         } catch (e) {}
+      })
+
+      // UPDATE PROFILE
+      .addCase(updateUserProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        const normalizedUser = normalizeUserData(action.payload);
+        state.user = normalizedUser;
+        if (normalizedUser) {
+          localStorage.setItem("user", JSON.stringify(normalizedUser));
+        }
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

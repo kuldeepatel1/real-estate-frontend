@@ -34,8 +34,7 @@ export default function EditProfile() {
 
     const payload = {
       user_name: form.name,
-      user_email: form.email,
-      user_mobile: form.phone,
+      user_phone: form.phone,
       user_address: form.address,
     };
 
@@ -131,11 +130,12 @@ export default function EditProfile() {
                 <input
                   type="email"
                   required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  readOnly
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-gray-100 cursor-not-allowed focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="Enter your email"
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
               </div>
 
               <div>

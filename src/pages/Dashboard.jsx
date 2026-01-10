@@ -88,11 +88,10 @@ export default function Dashboard() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-3 sm:px-4 border-b-2 font-medium text-sm sm:text-base whitespace-nowrap capitalize ${
-                    activeTab === tab
+                  className={`py-4 px-3 sm:px-4 border-b-2 font-medium text-sm sm:text-base whitespace-nowrap capitalize ${activeTab === tab
                       ? "border-indigo-600 text-indigo-600"
                       : "border-transparent text-gray-500"
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -169,19 +168,22 @@ export default function Dashboard() {
                     >
                       <div>
                         <h4 className="font-medium">
-                          {apt.property_id?.title || "Property Visit"}
+                          {apt.property_title || "Property Visit"}
                         </h4>
+
                         <p className="text-sm text-gray-500">
-                          {new Date(
-                            apt.appointment_date || apt.date
-                          ).toLocaleDateString()}
+                          {new Date(apt.appointment_date || apt.date).toLocaleDateString()}{" "}
+                          {new Date(`1970-01-01T${apt.appointment_time}`).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
+
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
-                        apt.status === "confirmed" ? "bg-green-100 text-green-700" :
-                        apt.status === "pending" ? "bg-yellow-100 text-yellow-700" :
-                        "bg-red-100 text-red-700"
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${apt.status === "confirmed" ? "bg-green-100 text-green-700" :
+                          apt.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                            "bg-red-100 text-red-700"
+                        }`}>
                         {apt.status}
                       </span>
                     </div>
