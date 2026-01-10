@@ -5,6 +5,7 @@ import { fetchFavorites } from "../redux/slices/favoriteSlice";
 import { fetchAppointments, cancelAppointment } from "../redux/slices/appointmentSlice";
 import { logout } from "../redux/slices/authSlice";
 import PropertyCard from "../components/PropertyCard";
+import { Avatar } from "antd";
 
 export default function Dashboard() {
   const dispatch = useDispatch();
@@ -56,11 +57,13 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-indigo-600">
-                  {user?.name?.charAt(0) || user?.user_name?.charAt(0) || "U"}
-                </span>
-              </div>
+              <Avatar
+                size={64}
+                src={user?.user_profile_picture ? `${import.meta.env.VITE_API_URL}${user.user_profile_picture}` : null}
+                alt={user?.name || user?.user_name || "User"}
+              >
+                {user?.name?.charAt(0) || user?.user_name?.charAt(0) || "U"}
+              </Avatar>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
                   {user?.name || user?.user_name}

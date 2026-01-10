@@ -154,6 +154,15 @@ def update_profile(current_user):
             if 'user_address' in data:
                 user_vo.user_address = data['user_address']
 
+            # Handle profile picture removal
+            if 'remove_profile_picture' in data and data['remove_profile_picture'] == 'true':
+                # Delete old picture if exists
+                if user_vo.user_profile_picture:
+                    old_path = f"base/static/{folder_name}/{user_vo.user_profile_picture}"
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                user_vo.user_profile_picture = None
+
             profile_picture = request.files.get('user_profile_picture')
             if profile_picture and profile_picture.filename != '':
                 filename, _ = save_uploaded_file(profile_picture, folder_name)
@@ -178,10 +187,26 @@ def update_profile(current_user):
                 user_vo.user_address = data['user_address']
             if 'user_profile_picture' in data:
                 user_vo.user_profile_picture = data['user_profile_picture']
+            # Handle profile picture removal via JSON
+            if 'remove_profile_picture' in data and data['remove_profile_picture'] == True:
+                # Delete old picture if exists
+                if user_vo.user_profile_picture:
+                    old_path = f"base/static/{folder_name}/{user_vo.user_profile_picture}"
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                user_vo.user_profile_picture = None
 
         UserDAO().update_user(user_vo)
+        
+        # Return updated user data
+        user_data = user_vo.as_dict()
+        if user_data['user_profile_picture']:
+            user_data['user_profile_picture'] = f"/static/{folder_name}/{user_data['user_profile_picture']}"
+        else:
+            user_data['user_profile_picture'] = None
+            
         return jsonify(
-            format_response('success', 'Profile updated successfully')), 200
+            format_response('success', 'Profile updated successfully', user_data)), 200
 
     except Exception as e:
         return jsonify(format_response('error', str(e))), 500

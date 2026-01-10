@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { bookAppointment } from "../redux/slices/appointmentSlice";
+import { Avatar } from "antd";
 
 export default function BookAppointment() {
   const dispatch = useDispatch();
@@ -183,11 +184,13 @@ export default function BookAppointment() {
             </h2>
             <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
+                <Avatar
+                  size={40}
+                  src={user?.user_profile_picture ? `${import.meta.env.VITE_API_URL}${user.user_profile_picture}` : null}
+                  alt={user?.name || user?.user_name || "User"}
+                >
+                  {user?.name?.charAt(0) || user?.user_name?.charAt(0) || "U"}
+                </Avatar>
                 <div>
                   <p className="font-medium text-gray-900">{user?.name || user?.user_name || "Guest User"}</p>
                   <p className="text-sm text-gray-500">{user?.email}</p>

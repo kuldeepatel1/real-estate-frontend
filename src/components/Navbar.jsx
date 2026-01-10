@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Avatar } from "antd";
+import { UserOutlined } from "@ant-design/icons";
 import { logout } from "../redux/slices/authSlice";
+
+// Build profile picture URL
+function buildProfilePictureUrl(filename) {
+  if (!filename) return null;
+  if (filename.startsWith("http://") || filename.startsWith("https://")) {
+    return filename;
+  }
+  if (filename.startsWith("/")) {
+    return (import.meta.env.VITE_API_URL || "") + filename;
+  }
+  return (import.meta.env.VITE_API_URL || "") + "/static/profile_pictures/" + filename;
+}
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -17,6 +31,8 @@ export default function Navbar() {
 
   const userRole = user?.user_role || user?.role;
   const isAdmin = userRole === "admin";
+  const profilePicture = user?.profilePicture || user?.user_profile_picture;
+  const profilePictureUrl = profilePicture ? buildProfilePictureUrl(profilePicture) : null;
 
   return (
     <nav className="bg-gray-900 text-white sticky top-0 z-50">
@@ -44,7 +60,17 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {token ? (
               <div className="flex items-center gap-3 ml-4 pl-4 border-l border-gray-700">
-                <span className="text-sm text-gray-400 hidden lg:block max-w-[120px] truncate">{user?.name || user?.user_name}</span>
+                <Link to="/edit-profile" className="flex items-center gap-2 hover:bg-gray-800 rounded-lg p-1 pr-3 transition">
+                  <Avatar 
+                    size={32} 
+                    src={profilePictureUrl}
+                    icon={!profilePictureUrl && <UserOutlined />}
+                    className="bg-indigo-600"
+                  />
+                  <span className="text-sm text-gray-300 hidden lg:block max-w-[120px] truncate">
+                    {user?.name || user?.user_name}
+                  </span>
+                </Link>
                 <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg text-sm transition">Logout</button>
               </div>
             ) : (
@@ -86,16 +112,23 @@ export default function Navbar() {
               <div className="pt-4 border-t border-gray-700 mt-4">
                 {token ? (
                   <>
-                    <div className="flex items-center gap-3 px-4 py-2">
-                      <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold">{user?.name?.charAt(0) || user?.user_name?.charAt(0) || "U"}</span>
-                      </div>
+                    <Link 
+                      to="/edit-profile" 
+                      className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-800 mb-3"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Avatar 
+                        size={40} 
+                        src={profilePictureUrl}
+                        icon={!profilePictureUrl && <UserOutlined />}
+                        className="bg-indigo-600"
+                      />
                       <div>
                         <p className="text-sm font-medium">{user?.name || user?.user_name}</p>
                         <p className="text-xs text-gray-400">{user?.email || user?.user_email}</p>
                       </div>
-                    </div>
-                    <button onClick={handleLogout} className="w-full mt-3 bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg transition text-left flex items-center gap-3">
+                    </Link>
+                    <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg transition text-left flex items-center gap-3">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>

@@ -14,6 +14,21 @@ const getErrorMessage = (err) => {
   return err.message || "Something went wrong";
 };
 
+// Build full URL for profile picture
+const buildProfilePictureUrl = (filename) => {
+  if (!filename) return null;
+  // Already has full URL or starts with http
+  if (filename.startsWith("http://") || filename.startsWith("https://")) {
+    return filename;
+  }
+  // Starts with /static/
+  if (filename.startsWith("/")) {
+    return (import.meta.env.VITE_API_URL || "") + filename;
+  }
+  // Just filename
+  return (import.meta.env.VITE_API_URL || "") + "/static/profile_pictures/" + filename;
+};
+
 const normalizeUserData = (user) => {
   if (!user) return null;
   return {
@@ -24,7 +39,8 @@ const normalizeUserData = (user) => {
     address: user.user_address || user.address,
     user_role: user.user_role || user.role,
     role: user.user_role || user.role,
-    profilePicture: user.user_profile_picture || null,
+    profilePicture: buildProfilePictureUrl(user.user_profile_picture || user.profilePicture || null),
+    user_profile_picture: user.user_profile_picture || user.profilePicture || null,
   };
 };
 
@@ -96,17 +112,24 @@ export const updateUserProfile = createAsyncThunk(
   async (data, { rejectWithValue, getState }) => {
     try {
       const res = await updateProfile(data);
-      // Get current user from state to preserve email and other fields
+      // Backend returns response in format: { message, status, data: user_data }
+      // The updateProfile API returns the full response, so we need to get data.data
+      let userData = null;
+      
+      if (res.data && res.data.data) {
+        // Backend returns data in res.data.data
+        userData = res.data.data;
+      } else if (res.data) {
+        userData = res.data;
+      }
+      
+      if (userData) {
+        return normalizeUserData(userData);
+      }
+      
+      // Fallback: get current user from state
       const currentUser = getState().auth.user;
-      // Merge current user data with updated data to preserve email
-      const mergedData = {
-        ...currentUser,
-        ...data,
-        user_name: data.user_name,
-        user_phone: data.user_phone,
-        user_address: data.user_address,
-      };
-      return normalizeUserData(mergedData);
+      return currentUser;
     } catch (err) {
       return rejectWithValue(getErrorMessage(err));
     }
@@ -129,6 +152,14 @@ const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    updateProfilePicture: (state, action) => {
+      // Update profile picture directly in state (for immediate UI update)
+      if (state.user) {
+        state.user.profilePicture = buildProfilePictureUrl(action.payload);
+        state.user.user_profile_picture = action.payload;
+        localStorage.setItem("user", JSON.stringify(state.user));
+      }
     },
   },
   extraReducers: (builder) => {
@@ -204,6 +235,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, updateProfilePicture } = authSlice.actions;
 export default authSlice.reducer;
 

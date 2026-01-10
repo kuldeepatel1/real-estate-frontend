@@ -3,6 +3,7 @@ import AdminLayout from "../components/AdminLayout";
 import { useDispatch } from "react-redux";
 import { fetchProfile } from "../redux/slices/authSlice";
 import { getAllUsers } from "../services/authService";
+import { Avatar } from "antd";
 
 export default function AdminUsers() {
   const dispatch = useDispatch();
@@ -92,11 +93,13 @@ export default function AdminUsers() {
         onClick={() => handleViewUser(user)}
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-violet-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-indigo-600 font-bold text-lg">
-              {userName?.charAt(0) || "U"}
-            </span>
-          </div>
+          <Avatar
+            size={48}
+            src={user?.user_profile_picture ? `${import.meta.env.VITE_API_URL}${user.user_profile_picture}` : null}
+            alt={userName || "User"}
+          >
+            {userName?.charAt(0) || "U"}
+          </Avatar>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-slate-900 truncate">{userName}</h3>
             <p className="text-sm text-slate-500 truncate">{userEmail}</p>
@@ -344,11 +347,13 @@ export default function AdminUsers() {
             <div className="p-6">
               {/* User Info Header */}
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-violet-100 rounded-full flex items-center justify-center">
-                  <span className="text-indigo-600 font-bold text-xl">
-                    {(selectedUser.user_name || selectedUser.name)?.charAt(0) || "U"}
-                  </span>
-                </div>
+                <Avatar
+                  size={64}
+                  src={selectedUser?.user_profile_picture ? `${import.meta.env.VITE_API_URL}${selectedUser.user_profile_picture}` : null}
+                  alt={selectedUser.user_name || selectedUser.name || "User"}
+                >
+                  {(selectedUser.user_name || selectedUser.name)?.charAt(0) || "U"}
+                </Avatar>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-semibold text-slate-900 text-lg truncate">
                     {selectedUser.user_name || selectedUser.name || "N/A"}

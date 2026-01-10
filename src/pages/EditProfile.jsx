@@ -1,7 +1,64 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { updateUserProfile } from "../redux/slices/authSlice";
+import Cropper from "react-easy-crop";
+import { Slider, Avatar, Button, Modal, message } from "antd";
+import { UserOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { updateUserProfile, updateProfilePicture } from "../redux/slices/authSlice";
+
+// Helper function to create image from blob
+const createImage = (url) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener("load", () => resolve(image));
+    image.addEventListener("error", (error) => reject(error));
+    image.setAttribute("crossOrigin", "anonymous");
+    image.src = url;
+  });
+
+// Helper function to get cropped blob
+const getCroppedImg = async (imageSrc, pixelCrop) => {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
+  );
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Canvas is empty"));
+        return;
+      }
+      resolve(blob);
+    }, "image/jpeg", 0.95);
+  });
+};
+
+// Build profile picture URL
+const buildProfilePictureUrl = (filename) => {
+  if (!filename) return null;
+  if (filename.startsWith("http://") || filename.startsWith("https://")) {
+    return filename;
+  }
+  if (filename.startsWith("/")) {
+    return `${import.meta.env.VITE_API_URL || ""}${filename}`;
+  }
+  return `${import.meta.env.VITE_API_URL || ""}/static/profile_pictures/${filename}`;
+};
 
 export default function EditProfile() {
   const dispatch = useDispatch();
@@ -15,7 +72,21 @@ export default function EditProfile() {
     phone: "",
     address: "",
   });
-  const [submitted, setSubmitted] = useState(false);
+
+  // Profile image state
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  
+  // Cropping state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [tempPreview, setTempPreview] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const fileInputRef = useRef(null);
 
   // Prefill form with user data
   useEffect(() => {
@@ -26,8 +97,141 @@ export default function EditProfile() {
         phone: user.phone || user.user_mobile || "",
         address: user.address || user.user_address || "",
       });
+
+      // Set initial profile picture
+      const profilePic = user.profilePicture || user.user_profile_picture;
+      if (profilePic) {
+        const url = buildProfilePictureUrl(profilePic);
+        setImagePreview(url);
+        setImageUrl(url);
+      }
     }
   }, [user]);
+
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        message.error("Please select an image file");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        setTempPreview(reader.result);
+        setPreviewOpen(true);
+        setZoom(1);
+        setCrop({ x: 0, y: 0 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Trigger file input
+  const handleUploadClick = () => {
+    // Reset file input value to allow selecting the same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    fileInputRef.current?.click();
+  };
+
+  // Handle avatar click
+  const handleAvatarClick = () => {
+    handleUploadClick();
+  };
+
+// Remove image
+  const handleRemoveImage = async (e) => {
+    e.stopPropagation();
+    
+    try {
+      // Send request to remove profile picture
+      const formData = new FormData();
+      formData.append("user_name", form.name);
+      formData.append("user_phone", form.phone);
+      formData.append("user_address", form.address);
+      formData.append("remove_profile_picture", "true");
+      
+      const res = await dispatch(updateUserProfile(formData));
+      
+      if (res.meta.requestStatus === "fulfilled") {
+        message.success("Profile picture removed successfully!");
+        setImageFile(null);
+        setImagePreview(null);
+        setImageUrl(null);
+        dispatch(updateProfilePicture(null));
+      } else {
+        message.error(res.payload || "Failed to remove profile picture");
+      }
+    } catch (error) {
+      console.error("Failed to remove profile picture:", error);
+      message.error("Failed to remove profile picture");
+    }
+  };
+
+  // Handle crop complete
+  const onCropComplete = (croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  // Handle modal ok
+  const handleModalOk = async () => {
+    if (!croppedAreaPixels) return;
+
+    setUploading(true);
+    try {
+      const croppedBlob = await getCroppedImg(tempPreview, croppedAreaPixels);
+      const croppedFile = new File([croppedBlob], "profile.jpg", {
+        type: "image/jpeg",
+      });
+
+      setImageFile(croppedFile);
+
+      // Create local preview URL for immediate feedback
+      const localPreviewUrl = URL.createObjectURL(croppedBlob);
+      setImagePreview(localPreviewUrl);
+      setImageUrl(localPreviewUrl);
+
+      // Create FormData for upload
+      const formData = new FormData();
+      formData.append("user_profile_picture", croppedFile);
+      formData.append("user_name", form.name);
+      formData.append("user_phone", form.phone);
+      formData.append("user_address", form.address);
+
+      // Upload to server
+      const res = await dispatch(updateUserProfile(formData));
+      
+      if (res.meta.requestStatus === "fulfilled") {
+        message.success("Profile picture uploaded successfully!");
+        
+        // Get the updated user data from the response
+        const updatedUser = res.payload;
+        if (updatedUser) {
+          // Use the server-provided URL
+          const serverUrl = updatedUser.profilePicture || updatedUser.user_profile_picture;
+          if (serverUrl) {
+            setImageUrl(serverUrl);
+            setImagePreview(serverUrl);
+          }
+        }
+        
+        // Also update Redux state directly
+        dispatch(updateProfilePicture(updatedUser?.profilePicture || updatedUser?.user_profile_picture));
+        
+        setPreviewOpen(false);
+      } else {
+        message.error(res.payload || "Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Failed to process image:", error);
+      message.error("Failed to process image");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,29 +244,14 @@ export default function EditProfile() {
 
     const res = await dispatch(updateUserProfile(payload));
     if (res.meta.requestStatus === "fulfilled") {
-      setSubmitted(true);
+      message.success("Profile updated successfully!");
       setTimeout(() => {
         navigate("/dashboard");
-      }, 2000);
+      }, 1500);
+    } else {
+      message.error(res.payload || "Failed to update profile");
     }
   };
-
-  if (submitted) {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center shadow-lg">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Profile Updated!</h3>
-          <p className="text-gray-600 mb-4">Your profile has been successfully updated.</p>
-          <p className="text-sm text-gray-500">Redirecting to dashboard...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-[80vh] py-8 px-4">
@@ -74,6 +263,58 @@ export default function EditProfile() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Profile Image Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Profile Image
+            </h3>
+
+            <div className="flex items-center gap-6">
+              {/* Circle Preview */}
+              <div className="relative inline-block cursor-pointer" onClick={handleAvatarClick}>
+                <Avatar
+                  size={120}
+                  src={imagePreview}
+                  icon={!imagePreview && <UserOutlined />}
+                  className="border border-gray-300 shadow-sm"
+                />
+
+                {/* Delete Icon */}
+                {imagePreview && (
+                  <div
+                    onClick={handleRemoveImage}
+                    className="
+                      absolute -top-2 -right-2
+                      bg-red-500 text-white
+                      rounded-full p-1
+                      cursor-pointer
+                      shadow-md
+                      hover:bg-red-600
+                    "
+                  >
+                    <DeleteOutlined style={{ fontSize: 14 }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Button */}
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
+              <Button 
+                icon={<PlusOutlined />} 
+                onClick={handleUploadClick}
+                size="large"
+              >
+                Upload Profile Image
+              </Button>
+            </div>
+          </div>
+
           {/* Current Profile Info */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
@@ -84,10 +325,18 @@ export default function EditProfile() {
             </h2>
             <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
               <div className="flex flex-col sm:flex-row items-start gap-4">
-                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl font-bold text-indigo-600">
-                    {user?.name?.charAt(0) || user?.user_name?.charAt(0) || "U"}
-                  </span>
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {imagePreview ? (
+                    <img 
+                      src={imagePreview} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl font-bold text-indigo-600">
+                      {user?.name?.charAt(0) || user?.user_name?.charAt(0) || "U"}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 w-full">
                   <p className="font-semibold text-gray-900 text-lg">
@@ -222,6 +471,45 @@ export default function EditProfile() {
           </div>
         </form>
       </div>
+
+      {/* Crop Modal */}
+      <Modal
+        open={previewOpen}
+        title="Set Profile Image"
+        onCancel={() => setPreviewOpen(false)}
+        onOk={handleModalOk}
+        okText={uploading ? 'Uploading...' : 'Set Profile Image'}
+        width={420}
+        confirmLoading={uploading}
+      >
+        <div className="relative w-full h-[320px] bg-black rounded-lg overflow-hidden">
+          {tempPreview && (
+            <Cropper
+              image={tempPreview}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          )}
+        </div>
+        <div className="mt-4 px-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Zoom</span>
+            <Slider
+              min={1}
+              max={3}
+              step={0.01}
+              value={zoom}
+              onChange={setZoom}
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
