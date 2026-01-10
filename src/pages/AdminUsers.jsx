@@ -250,11 +250,13 @@ export default function AdminUsers() {
                   <tr key={u._id || u.user_id || u.id || `u-${i}`} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-violet-100 rounded-full flex items-center justify-center">
-                          <span className="text-indigo-600 font-semibold">
-                            {u.name?.charAt(0) || u.user_name?.charAt(0) || "U"}
-                          </span>
-                        </div>
+                        <Avatar
+                          size={40}
+                          src={u?.user_profile_picture ? `${import.meta.env.VITE_API_URL}${u.user_profile_picture}` : null}
+                          alt={u.name || u.user_name || "User"}
+                        >
+                          {(u.name || u.user_name)?.charAt(0) || "U"}
+                        </Avatar>
                         <div>
                           <p className="font-semibold text-slate-800">{u.name || u.user_name}</p>
                           <p className="text-sm text-slate-500">{u.mobile || u.user_mobile}</p>

@@ -83,10 +83,24 @@ export default function BookAppointment() {
             </h2>
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
               <div className="flex flex-col sm:flex-row items-start gap-4">
-                <div className="w-16 h-16 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
+                <div className="w-24 h-24 bg-indigo-100 rounded-lg flex-shrink-0 overflow-hidden">
+                  {property?.property_images && property.property_images[0] ? (
+                    <img 
+                      src={`${import.meta.env.VITE_API_URL}${property.property_images[0]}`}
+                      alt={property.title || property.property_title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : property?.image ? (
+                    <img 
+                      src={`${import.meta.env.VITE_API_URL}${property.image}`}
+                      alt={property.title || property.property_title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg className="w-8 h-8 text-indigo-600 m-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                  )}
                 </div>
                 <div className="flex-1 w-full">
                   <p className="font-semibold text-gray-900 text-lg">{property?.title || property?.property_title}</p>

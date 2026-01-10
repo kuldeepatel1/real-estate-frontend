@@ -10,6 +10,7 @@ import { fetchLocations } from "../redux/slices/locationSlice";
 import PropertyCard from "../components/PropertyCard";
 import ReviewForm from "../components/ReviewForm";
 import { getAllImageUrls, hasImages } from "../utils/imageHelper";
+import { Avatar } from "antd";
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -393,11 +394,13 @@ export default function PropertyDetails() {
                   {reviews.map((review) => (
                     <div key={review.review_id || review._id} className="border-b border-gray-100 pb-4 last:border-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                          <span className="text-indigo-600 font-medium">
-                            {(review.user_name || "U").charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+                        <Avatar
+                          size={40}
+                          src={review?.user_id?.user_profile_picture ? `${import.meta.env.VITE_API_URL}${review.user_id.user_profile_picture}` : null}
+                          alt={review.user_name || review.user_id?.user_name || "User"}
+                        >
+                          {(review.user_name || review.user_id?.user_name || "U").charAt(0).toUpperCase()}
+                        </Avatar>
                         <div>
                           <p className="font-medium">{review.user_name || "User"}</p>
                           <div className="flex items-center gap-1">

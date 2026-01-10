@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Avatar } from "antd";
 import api from "../services/api";
 
 export default function AdminReviews() {
@@ -65,6 +66,16 @@ export default function AdminReviews() {
       return review.user_name;
     }
     return `User #${review.user_id || "Unknown"}`;
+  };
+
+  const getUserProfilePicture = (review) => {
+    if (review.user_id?.user_profile_picture) {
+      return review.user_id.user_profile_picture;
+    }
+    if (review.user_profile_picture) {
+      return review.user_profile_picture;
+    }
+    return null;
   };
 
   // Get status badge styling with icons
@@ -348,11 +359,14 @@ export default function AdminReviews() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-green-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-bold text-emerald-600">
-                            {getUserInfo(review).charAt(0)}
-                          </span>
-                        </div>
+                        <Avatar
+                          size={40}
+                          src={getUserProfilePicture(review) ? `${import.meta.env.VITE_API_URL}${getUserProfilePicture(review)}` : null}
+                          alt={getUserInfo(review)}
+                          className="bg-gradient-to-br from-emerald-100 to-green-100"
+                        >
+                          {getUserInfo(review).charAt(0).toUpperCase()}
+                        </Avatar>
                         <p className="font-semibold text-slate-800">{getUserInfo(review)}</p>
                       </div>
                     </td>
