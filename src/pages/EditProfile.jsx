@@ -497,18 +497,6 @@ export default function EditProfile() {
             />
           )}
         </div>
-        <div className="mt-4 px-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Zoom</span>
-            <Slider
-              min={1}
-              max={3}
-              step={0.01}
-              value={zoom}
-              onChange={setZoom}
-            />
-          </div>
-        </div>
       </Modal>
     </div>
   );
