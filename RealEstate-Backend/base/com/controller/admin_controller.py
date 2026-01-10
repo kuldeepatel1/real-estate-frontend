@@ -1,6 +1,7 @@
 from flask import jsonify
 
 from base import app
+from base.com.dao.appointment_dao import AppointmentDAO
 from base.com.dao.property_dao import PropertyDAO
 from base.com.dao.review_dao import ReviewDAO
 from base.com.dao.user_dao import UserDAO
@@ -16,17 +17,24 @@ def admin_dashboard(current_user):
         user_dao = UserDAO()
         property_dao = PropertyDAO()
         review_dao = ReviewDAO()
+        appointment_dao = AppointmentDAO()
 
         total_users = len(user_dao.get_all_users())
         total_properties = len(property_dao.get_all_properties())
         pending_approvals = len(property_dao.get_pending_approvals())
         pending_reviews = len(review_dao.get_pending_reviews())
 
+        all_appointments = appointment_dao.get_all_appointments()
+        total_appointments = len(all_appointments)
+        cancelled_appointments = len([a for a in all_appointments if a[0].appointment_status == 'cancelled'])
+
         return jsonify(format_response('success', 'Dashboard data retrieved', {
             'total_users': total_users,
             'total_properties': total_properties,
             'pending_approvals': pending_approvals,
-            'pending_reviews': pending_reviews
+            'pending_reviews': pending_reviews,
+            'total_appointments': total_appointments,
+            'cancelled_appointments': cancelled_appointments
         })), 200
     except Exception as e:
         return jsonify(format_response('error', str(e))), 500
@@ -167,5 +175,24 @@ def approve_review(current_user, review_id):
         else:
             return jsonify(
                 format_response('error', 'Failed to approve review')), 500
+    except Exception as e:
+        return jsonify(format_response('error', str(e))), 500
+
+
+@app.route('/api/admin/appointments', methods=['GET'])
+@token_required
+@admin_required
+def get_all_appointments(current_user):
+    try:
+        appointment_dao = AppointmentDAO()
+        appointments = appointment_dao.get_all_appointments()
+
+        result = []
+        for appointment_vo, buyer_vo, _ in appointments:
+            appointment_data = appointment_vo.as_dict()
+            appointment_data['buyer_name'] = buyer_vo.user_name
+            result.append(appointment_data)
+
+        return jsonify(format_response('success', 'All appointments retrieved', result)), 200
     except Exception as e:
         return jsonify(format_response('error', str(e))), 500

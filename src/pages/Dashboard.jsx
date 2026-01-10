@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFavorites } from "../redux/slices/favoriteSlice";
-import { fetchAppointments } from "../redux/slices/appointmentSlice";
+import { fetchAppointments, cancelAppointment } from "../redux/slices/appointmentSlice";
 import { logout } from "../redux/slices/authSlice";
 import PropertyCard from "../components/PropertyCard";
 
@@ -36,6 +36,13 @@ export default function Dashboard() {
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
+  };
+
+/* ---------------- CANCEL APPOINTMENT ---------------- */
+  const handleCancelAppointment = (appointmentId) => {
+    if (window.confirm("Are you sure you want to cancel this appointment?")) {
+      dispatch(cancelAppointment(appointmentId));
+    }
   };
 
   const userAppointments = appointmentsList.filter(
@@ -180,12 +187,22 @@ export default function Dashboard() {
                         </p>
 
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${apt.status === "confirmed" ? "bg-green-100 text-green-700" :
-                          apt.status === "pending" ? "bg-yellow-100 text-yellow-700" :
-                            "bg-red-100 text-red-700"
-                        }`}>
-                        {apt.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${apt.status === "confirmed" ? "bg-green-100 text-green-700" :
+                            apt.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                              "bg-red-100 text-red-700"
+                          }`}>
+                          {apt.status}
+                        </span>
+                        {apt.status !== "cancelled" && (
+                          <button
+                            onClick={() => handleCancelAppointment(apt._id)}
+                            className="px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))
                 )}

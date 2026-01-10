@@ -145,6 +145,41 @@ def update_appointment_status(current_user, appointment_id):
         return jsonify(format_response('error', str(e))), 500
 
 
+@app.route('/api/appointments/<int:appointment_id>/cancel', methods=['PUT'])
+@token_required
+def cancel_appointment(current_user, appointment_id):
+    try:
+        appointment_dao = AppointmentDAO()
+        appointment_vo = appointment_dao.get_appointment_by_id(appointment_id)
+
+        if not appointment_vo:
+            return jsonify(
+                format_response('error', 'Appointment not found')), 404
+
+        if current_user['user_id'] != appointment_vo.buyer_id:
+            return jsonify(format_response('error',
+                                           'Unauthorized to cancel this appointment')), 403
+
+        if appointment_vo.appointment_status == 'cancelled':
+            return jsonify(format_response('error',
+                                           'Appointment is already cancelled')), 400
+
+        if appointment_vo.appointment_status == 'completed':
+            return jsonify(format_response('error',
+                                           'Cannot cancel a completed appointment')), 400
+
+        success = appointment_dao.update_appointment_status(appointment_id, 'cancelled')
+
+        if success:
+            return jsonify(format_response('success',
+                                           'Appointment cancelled successfully')), 200
+        else:
+            return jsonify(
+                format_response('error', 'Failed to cancel appointment')), 500
+    except Exception as e:
+        return jsonify(format_response('error', str(e))), 500
+
+
 @app.route('/api/appointments/<int:appointment_id>', methods=['DELETE'])
 @token_required
 def delete_appointment(current_user, appointment_id):

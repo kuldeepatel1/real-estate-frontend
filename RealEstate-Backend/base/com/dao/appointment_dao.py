@@ -86,6 +86,13 @@ class AppointmentDAO:
         appointment_vo = AppointmentVO.query.get(appointment_id)
         if appointment_vo:
             appointment_vo.appointment_status = status
+            db.session.flush()
             db.session.commit()
             return True
         return False
+
+    def get_all_appointments(self):
+        appointment_vo_list = db.session.query(AppointmentVO, UserVO, UserVO) \
+            .join(UserVO, AppointmentVO.buyer_id == UserVO.user_id) \
+            .all()
+        return appointment_vo_list

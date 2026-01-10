@@ -49,6 +49,18 @@ export const updateAppointmentStatus = createAsyncThunk(
   }
 );
 
+export const cancelAppointment = createAsyncThunk(
+  "appointments/cancel",
+  async (appointmentId, { rejectWithValue }) => {
+    try {
+      const res = await appointmentService.cancelAppointment(appointmentId);
+      return { appointmentId, ...res.data };
+    } catch (err) {
+      return rejectWithValue(getErrorMessage(err));
+    }
+  }
+);
+
 const appointmentSlice = createSlice({
   name: "appointments",
   initialState: {
@@ -115,6 +127,22 @@ const appointmentSlice = createSlice({
         }
       })
       .addCase(updateAppointmentStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(cancelAppointment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(cancelAppointment.fulfilled, (state, action) => {
+        state.loading = false;
+        const { appointmentId } = action.payload;
+        const index = state.list.findIndex((a) => a._id === appointmentId);
+        if (index !== -1) {
+          state.list[index].status = "cancelled";
+        }
+      })
+      .addCase(cancelAppointment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
