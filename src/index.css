@@ -25,6 +25,96 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
+
+  /* Range Slider Thumb Styles */
+  input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  pointer-events: auto;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.range-slider-min,
+.range-slider-max {
+  position: absolute;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 4px;
+}
+
+.range-slider-min::-webkit-slider-thumb,
+.range-slider-max::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4f46e5;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4);
+  border: 2px solid white;
+  position: relative;
+  z-index: 20;
+  margin-top: -10px;
+}
+
+.range-slider-min::-webkit-slider-thumb:hover,
+.range-slider-max::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.25);
+}
+
+.range-slider-min::-webkit-slider-thumb:active,
+.range-slider-max::-webkit-slider-thumb:active {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 10px rgba(79, 70, 229, 0.3);
+}
+
+.range-slider-min::-webkit-slider-runnable-track,
+.range-slider-max::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+  border-radius: 2px;
+}
+
+.range-slider-min::-moz-range-thumb,
+.range-slider-max::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4f46e5;
+  cursor: pointer;
+  border: 2px solid white;
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  z-index: 20;
+}
+
+.range-slider-min::-moz-range-thumb:hover,
+.range-slider-max::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.25);
+}
+
+.range-slider-min::-moz-range-track,
+.range-slider-max::-moz-range-track {
+  height: 4px;
+  background: transparent;
+  border-radius: 2px;
+  border: none;
+}
+
 }
 
 @layer components {

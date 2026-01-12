@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProperties } from "../redux/slices/propertySlice";
@@ -9,6 +9,39 @@ import PropertyCard from "../components/PropertyCard";
 
 // Separate FiltersContent component to prevent unnecessary re-renders
 function FiltersContent({ filters, categoriesList, locationsList, handleFilterChange }) {
+  const priceSliderRef = useRef(null);
+  const minPriceInputRef = useRef(null);
+  const maxPriceInputRef = useRef(null);
+
+  // Handle click on slider to determine which thumb to move
+  const handleSliderClick = useCallback((e) => {
+    if (!priceSliderRef.current) return;
+
+    const rect = priceSliderRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const sliderWidth = rect.width;
+    const clickPercentage = clickX / sliderWidth;
+    const clickValue = clickPercentage * 10000000;
+
+    const midPoint = ((filters.minPrice || 0) + (filters.maxPrice || 10000000)) / 2;
+
+    // If clicking on the left half, move min price; otherwise move max price
+    if (clickValue < midPoint) {
+      // Move min price slider
+      if (minPriceInputRef.current) {
+        minPriceInputRef.current.value = Math.min(clickValue, (filters.maxPrice || 10000000) - 50000);
+        const event = { target: minPriceInputRef.current };
+        handleFilterChange("minPrice", Math.min(clickValue, (filters.maxPrice || 10000000) - 50000));
+      }
+    } else {
+      // Move max price slider
+      if (maxPriceInputRef.current) {
+        maxPriceInputRef.current.value = Math.max(clickValue, (filters.minPrice || 0) + 50000);
+        handleFilterChange("maxPrice", Math.max(clickValue, (filters.minPrice || 0) + 50000));
+      }
+    }
+  }, [filters, handleFilterChange]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -98,22 +131,103 @@ function FiltersContent({ filters, categoriesList, locationsList, handleFilterCh
 
       {/* Price Range */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
-        <div className="flex gap-2">
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Price Range
+        </label>
+
+        {/* Slider */}
+        <div 
+          className="relative h-10 flex items-center cursor-pointer select-none" 
+          ref={priceSliderRef}
+          onMouseDown={handleSliderClick}
+          onClick={handleSliderClick}
+        >
+          {/* Track background */}
+          <div className="absolute left-0 right-0 h-2 bg-gray-200 rounded-full pointer-events-none"></div>
+          
+          {/* Active range */}
+          <div 
+            className="absolute h-2 bg-indigo-700 rounded-full z-10 pointer-events-none"
+            style={{
+              left: `${((filters.minPrice || 0) / 10000000) * 100}%`,
+              right: `${100 - ((filters.maxPrice || 10000000) / 10000000) * 100}%`
+            }}
+          ></div>
+
+          {/* Min Price Slider - pointer-events-none so container handles all interactions */}
           <input
-            type="number"
-            placeholder="Min"
-            className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            value={filters.minPrice}
-            onChange={(e) => handleFilterChange("minPrice", e.target.value)}
+            ref={minPriceInputRef}
+            type="range"
+            min="0"
+            max="10000000"
+            step="50000"
+            value={filters.minPrice || 0}
+            onChange={(e) => {
+              const value = Math.min(Number(e.target.value), (filters.maxPrice || 10000000) - 50000);
+              handleFilterChange("minPrice", value);
+            }}
+            className="absolute w-full h-2 appearance-none bg-transparent z-20 cursor-pointer range-slider-min pointer-events-none"
+            style={{ pointerEvents: 'none' }}
           />
+
+          {/* Max Price Slider - pointer-events-none so container handles all interactions */}
           <input
-            type="number"
-            placeholder="Max"
-            className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            value={filters.maxPrice}
-            onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
+            ref={maxPriceInputRef}
+            type="range"
+            min="0"
+            max="10000000"
+            step="50000"
+            value={filters.maxPrice || 10000000}
+            onChange={(e) => {
+              const value = Math.max(Number(e.target.value), (filters.minPrice || 0) + 50000);
+              handleFilterChange("maxPrice", value);
+            }}
+            className="absolute w-full h-2 appearance-none bg-transparent z-10 cursor-pointer range-slider-max pointer-events-none"
+            style={{ pointerEvents: 'none' }}
           />
+        </div>
+
+        {/* From / To Input Boxes */}
+        <div className="flex gap-3 mt-6">
+          <div className="flex-1 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all">
+            <label className="text-xs text-gray-500 font-medium">From :</label>
+            <div className="flex items-center mt-1">
+              <span className="text-gray-500 font-semibold mr-1">₹</span>
+              <input
+                type="text"
+                value={filters.minPrice?.toLocaleString() || '0'}
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/,/g, '');
+                  const value = Number(rawValue);
+                  if (!isNaN(value) && value >= 0 && value <= 10000000) {
+                    handleFilterChange("minPrice", Math.min(value, (filters.maxPrice || 10000000) - 50000));
+                  }
+                }}
+                className="w-full bg-transparent font-semibold text-gray-800 focus:outline-none"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all">
+            <label className="text-xs text-gray-500 font-medium">To :</label>
+            <div className="flex items-center mt-1">
+              <span className="text-gray-500 font-semibold mr-1">₹</span>
+              <input
+                type="text"
+                value={filters.maxPrice?.toLocaleString() || '10,000,000'}
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/,/g, '');
+                  const value = Number(rawValue);
+                  if (!isNaN(value) && value >= 0 && value <= 10000000) {
+                    handleFilterChange("maxPrice", Math.max(value, (filters.minPrice || 0) + 50000));
+                  }
+                }}
+                className="w-full bg-transparent font-semibold text-gray-800 focus:outline-none"
+                placeholder="10,000,000"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -137,8 +251,8 @@ export default function PropertyList() {
     category: searchParams.get("category") || "",
     location: searchParams.get("location") || "",
     propertyType: searchParams.get("type") || "",
-    minPrice: searchParams.get("minPrice") || "",
-    maxPrice: searchParams.get("maxPrice") || "",
+    minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : 0,
+    maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : 10000000,
   });
 
   // Memoized handleFilterChange
@@ -149,8 +263,8 @@ export default function PropertyList() {
         category: "",
         location: "",
         propertyType: "",
-        minPrice: "",
-        maxPrice: "",
+        minPrice: 0,
+        maxPrice: 10000000,
       });
     } else {
       setFilters((prev) => ({ ...prev, [key]: value }));
