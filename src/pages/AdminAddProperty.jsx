@@ -47,7 +47,7 @@ export default function AdminAddProperty() {
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const onCheckboxChange = (e) => setForm({ ...form, [e.target.name]: e.target.checked });
 
-  const MAX_IMAGES = 4;
+  const MAX_IMAGES = 7;
 
   const onFilesChange = (e) => {
     const files = Array.from(e.target.files || []);

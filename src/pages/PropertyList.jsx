@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchProperties } from "../redux/slices/propertySlice";
 import { fetchCategories } from "../redux/slices/categorySlice";
 import { fetchLocations } from "../redux/slices/locationSlice";
+import { fetchFavorites } from "../redux/slices/favoriteSlice";
 import PropertyCard from "../components/PropertyCard";
 
 // Separate FiltersContent component to prevent unnecessary re-renders
@@ -231,6 +232,8 @@ export default function PropertyList() {
 
   useEffect(() => {
     dispatch(fetchProperties({}));
+    // Fetch favorites for showing heart icons
+    dispatch(fetchFavorites());
   }, [dispatch]);
 
   // Update URL when filters change

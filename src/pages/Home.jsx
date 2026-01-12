@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchProperties } from "../redux/slices/propertySlice";
 import { fetchCategories } from "../redux/slices/categorySlice";
 import { fetchLocations } from "../redux/slices/locationSlice";
+import { fetchFavorites } from "../redux/slices/favoriteSlice";
 import PropertyCard from "../components/PropertyCard";
 
 export default function Home() {
@@ -33,6 +34,8 @@ export default function Home() {
     dispatch(fetchProperties({}));
     dispatch(fetchCategories());
     dispatch(fetchLocations());
+    // Fetch favorites for showing heart icons
+    dispatch(fetchFavorites());
   }, [dispatch]);
 
 

@@ -1,29 +1,53 @@
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { addToFavorites, removeFromFavorites } from "../redux/slices/favoriteSlice";
 import { getFirstImageUrl, hasImages } from "../utils/imageHelper";
 
 export default function PropertyCard({ property }) {
   const dispatch = useDispatch();
-  const { list: favorites } = useSelector((state) => state.favorites);
+  const { favoritesByPropertyId, list: favorites, loading } = useSelector((state) => state.favorites);
   const { token } = useSelector((state) => state.auth);
   
   const [imageError, setImageError] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  
+  // Use the O(1) lookup map for fast favorite status check
+  // Also fall back to array check for safety during transitions
+  const propertyId = property._id || property.propertyId;
+  const isFavoriteByMap = favoritesByPropertyId[propertyId];
+  const isFavoriteByArray = favorites.some((f) => 
+    f.property_id === propertyId || f.propertyId === propertyId
+  );
+  const isFavorite = isFavoriteByMap || isFavoriteByArray;
 
-  const isFavorite = favorites.some((f) => f.property_id === property._id || f.propertyId === property._id);
-
-  const handleFavorite = () => {
+  // Optimistic update handler with proper state management
+  const handleFavorite = async () => {
     if (!token) {
       alert("Please login to add favorites");
       return;
     }
-    if (isFavorite) {
-      const fav = favorites.find((f) => f.property_id === property._id || f.propertyId === property._id);
-      if (fav) dispatch(removeFromFavorites(fav._id));
+    
+    // Prevent multiple rapid clicks
+    if (isToggling) return;
+    
+    setIsToggling(true);
+    
+    // Get current state before dispatching
+    const wasFavorite = isFavorite;
+    
+    // Dispatch the action
+    if (wasFavorite) {
+      dispatch(removeFromFavorites(propertyId));
     } else {
-      dispatch(addToFavorites({ property_id: property._id }));
+      dispatch(addToFavorites({ property_id: propertyId }));
     }
+    
+    // Reset toggling state after a short delay
+    // This gives Redux time to update and prevents rapid clicks
+    setTimeout(() => {
+      setIsToggling(false);
+    }, 300);
   };
 
   const formatPrice = (price) => {
@@ -69,9 +93,13 @@ export default function PropertyCard({ property }) {
         {/* Favorite Button */}
         <button
           onClick={handleFavorite}
+          disabled={isToggling || !token}
           className={`absolute top-3 right-3 p-2 rounded-full transition ${
-            isFavorite ? "bg-red-500 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
-          }`}
+            isFavorite 
+              ? "bg-red-500 text-white" 
+              : "bg-white text-gray-600 hover:bg-gray-100"
+          } ${isToggling ? "opacity-50 cursor-not-allowed" : ""}`}
+          title={token ? (isFavorite ? "Remove from favorites" : "Add to favorites") : "Login to add favorites"}
         >
           <svg className="w-5 h-5" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
