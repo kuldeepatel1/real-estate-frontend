@@ -234,6 +234,15 @@ export default function AdminProperties() {
     }
   }, []);
 
+  // Clear persisted status from localStorage
+  const clearPersistedStatus = useCallback((propertyId) => {
+    try {
+      localStorage.removeItem(`property_status_${propertyId}`);
+    } catch (e) {
+      console.warn('Failed to clear persisted status:', e);
+    }
+  }, []);
+
   // Fetch review stats for all properties
   useEffect(() => {
     const fetchAllReviewStats = async () => {
@@ -323,6 +332,8 @@ export default function AdminProperties() {
     dispatch(asyncAction)
       .unwrap()
       .then(() => {
+        // Clear persisted status on successful backend update
+        clearPersistedStatus(propertyId);
         showToast(`Status updated to "${newStatus}" successfully!`, 'success');
       })
       .catch((error) => {

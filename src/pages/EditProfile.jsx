@@ -264,56 +264,7 @@ export default function EditProfile() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Profile Image Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Profile Image
-            </h3>
-
-            <div className="flex items-center gap-6">
-              {/* Circle Preview */}
-              <div className="relative inline-block cursor-pointer" onClick={handleAvatarClick}>
-                <Avatar
-                  size={120}
-                  src={imagePreview}
-                  icon={!imagePreview && <UserOutlined />}
-                  className="border border-gray-300 shadow-sm"
-                />
-
-                {/* Delete Icon */}
-                {imagePreview && (
-                  <div
-                    onClick={handleRemoveImage}
-                    className="
-                      absolute -top-2 -right-2
-                      bg-red-500 text-white
-                      rounded-full p-1
-                      cursor-pointer
-                      shadow-md
-                      hover:bg-red-600
-                    "
-                  >
-                    <DeleteOutlined style={{ fontSize: 14 }} />
-                  </div>
-                )}
-              </div>
-
-              {/* Upload Button */}
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                onChange={handleFileChange}
-              />
-              <Button 
-                icon={<PlusOutlined />} 
-                onClick={handleUploadClick}
-                size="large"
-              >
-                Upload Profile Image
-              </Button>
-            </div>
-          </div>
+          
 
           {/* Current Profile Info */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -410,7 +361,56 @@ export default function EditProfile() {
               </div>
             </div>
           </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Profile Image
+            </h3>
 
+            <div className="flex items-center gap-6">
+              {/* Circle Preview */}
+              <div className="relative inline-block cursor-pointer" onClick={handleAvatarClick}>
+                <Avatar
+                  size={120}
+                  src={imagePreview}
+                  icon={!imagePreview && <UserOutlined />}
+                  className="border border-gray-300 shadow-sm"
+                />
+
+                {/* Delete Icon */}
+                {imagePreview && (
+                  <div
+                    onClick={handleRemoveImage}
+                    className="
+                      absolute -top-2 -right-2
+                      bg-red-500 text-white
+                      rounded-full p-1
+                      cursor-pointer
+                      shadow-md
+                      hover:bg-red-600
+                    "
+                  >
+                    <DeleteOutlined style={{ fontSize: 14 }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Button */}
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
+              <Button 
+                icon={<PlusOutlined />} 
+                onClick={handleUploadClick}
+                size="large"
+              >
+                Upload Profile Image
+              </Button>
+            </div>
+          </div>
           {/* Account Info */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">

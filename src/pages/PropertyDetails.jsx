@@ -23,8 +23,23 @@ export default function PropertyDetails() {
   const { list: categories } = useSelector((state) => state.categories);
   const { list: locations } = useSelector((state) => state.locations);
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [imageErrors, setImageErrors] = useState({});
+ const [currentImageIndex, setCurrentImageIndex] = useState(0);
+const [imageErrors, setImageErrors] = useState({});
+
+const images = Array.isArray(getAllImageUrls(property))
+  ? getAllImageUrls(property)
+  : [];
+ useEffect(() => {
+  if (images.length <= 1) return;
+
+  const interval = setInterval(() => {
+    setCurrentImageIndex((prev) =>
+      prev === images.length - 1 ? 0 : prev + 1
+    );
+  }, 10000); // 10 seconds
+
+  return () => clearInterval(interval);
+}, [images.length]);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -40,7 +55,7 @@ export default function PropertyDetails() {
       dispatch(clearReviews());
     };
   }, [dispatch, id, token]);
-
+ 
   const isFavorite = favorites.some(
     (f) => f.property_id === property?._id || f.propertyId === property?._id
   );
@@ -153,7 +168,7 @@ export default function PropertyDetails() {
   }
 
   // Use imageHelper utility to get all image URLs
-  const images = getAllImageUrls(property);
+  
   
 
   return (
@@ -172,66 +187,115 @@ export default function PropertyDetails() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Image Gallery */}
-            <div className="bg-white rounded-xl overflow-hidden shadow-sm">
-              <div className="relative h-96">
-                {images.length > 0 && images[currentImageIndex] && !imageErrors[currentImageIndex] ? (
-                  <img
-                    src={images[currentImageIndex]}
-                    alt={property.title || property.property_title}
-                    className="w-full h-full object-cover"
-                    onError={() => handleImageError(currentImageIndex)}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <svg className="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                  </div>
-                )}
+           <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+  <div className="relative h-96">
 
-                {/* Favorite Button */}
-                <button
-                  onClick={handleFavorite}
-                  className={`absolute top-4 right-4 p-3 rounded-full transition ${
-                    isFavorite ? "bg-red-500 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <svg className="w-6 h-6" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
-              </div>
+    {/* Main Image */}
+    {images.length > 0 && images[currentImageIndex] && !imageErrors[currentImageIndex] ? (
+      <img
+        src={images[currentImageIndex]}
+        alt={property.title || property.property_title}
+        className="w-full h-full object-cover transition-all duration-500"
+        onError={() => handleImageError(currentImageIndex)}
+      />
+    ) : (
+      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+        <svg className="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M3 12l2-2 7-7 7 7M5 10v10h14V10" />
+        </svg>
+      </div>
+    )}
 
-              {/* Thumbnail Gallery */}
-              {images.length > 1 && (
-                <div className="flex gap-2 p-4 overflow-x-auto">
-                  {images.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition ${
-                        index === currentImageIndex ? "border-indigo-600" : "border-transparent"
-                      }`}
-                    >
-                      {img && !imageErrors[index] ? (
-                        <img 
-                          src={img} 
-                          alt="" 
-                          className="w-full h-full object-cover"
-                          onError={() => handleImageError(index)}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+    {/* ❤️ Favorite Button */}
+    <button
+      onClick={handleFavorite}
+      className={`absolute top-4 right-4 p-3 rounded-full transition ${
+        isFavorite ? "bg-red-500 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+      }`}
+    >
+      <svg className="w-6 h-6" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+    </button>
+
+   {/* ⬅ Previous */}
+<button
+  onClick={() =>
+    setCurrentImageIndex(
+      currentImageIndex === 0 ? images.length - 1 : currentImageIndex - 1
+    )
+  }
+  className="
+    absolute left-4 top-1/2 -translate-y-1/2 z-10
+    border border-white/60 text-white
+    p-3 rounded-full
+    backdrop-blur-0 bg-transparent
+    hover:bg-white/70 hover:backdrop-blur
+    hover:border-gray-300 hover:text-gray-800
+    shadow-sm hover:shadow-md
+    transition-all duration-300
+  "
+>
+  <svg
+    className="w-6 h-6"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+  </svg>
+</button>
+
+
+
+    {/* ➡ Next */}
+   {/* ➡ Next */}
+<button
+  onClick={() =>
+    setCurrentImageIndex(
+      currentImageIndex === images.length - 1 ? 0 : currentImageIndex + 1
+    )
+  }
+  className="
+    absolute right-4 top-1/2 -translate-y-1/2 z-10
+    border border-white/60 text-white
+    p-3 rounded-full
+    backdrop-blur-0 bg-transparent
+    hover:bg-white/70 hover:backdrop-blur
+    hover:border-gray-300 hover:text-gray-800
+    shadow-sm hover:shadow-md
+    transition-all duration-300
+  "
+>
+  <svg
+    className="w-6 h-6"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+  </svg>
+</button>
+
+
+    {/* 🔘 Bullet Dots */}
+    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      {images.map((_, index) => (
+        <button
+          key={index}
+          onClick={() => setCurrentImageIndex(index)}
+          className={`w-3 h-3 rounded-full transition ${
+            index === currentImageIndex ? "bg-white" : "bg-white/50"
+          }`}
+        />
+      ))}
+    </div>
+  </div>
+</div>
 
             {/* Property Info */}
             <div className="bg-white rounded-xl shadow-sm p-6">

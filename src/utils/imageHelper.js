@@ -31,6 +31,7 @@ export const parsePropertyImages = (imagesData) => {
  * @returns {string} - Full image URL
  */
 export const getFirstImageUrl = (property) => {
+  if (!property) return null;
   // Try different image paths in order of preference
   const imageSources = [
     () => property.images?.[0],
@@ -54,7 +55,7 @@ export const getFirstImageUrl = (property) => {
  * @returns {array} - Array of full image URLs
  */
 export const getAllImageUrls = (property) => {
-  // Try different image paths
+   if (!property) return [];
   const imageSources = [
     () => property.images,
     () => property.property_images,
@@ -105,6 +106,7 @@ export const buildImageUrl = (candidate) => {
  * @returns {boolean}
  */
 export const hasImages = (property) => {
+   if (!property) return false;
   const sources = [
     () => property.images,
     () => property.property_images,
@@ -128,6 +130,7 @@ export const hasImages = (property) => {
  * @returns {number}
  */
 export const getImageCount = (property) => {
+  if (!property) return 0;
   const sources = [
     () => property.images,
     () => property.property_images,
