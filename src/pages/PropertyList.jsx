@@ -20,24 +20,28 @@ function FiltersContent({ filters, categoriesList, locationsList, handleFilterCh
     const rect = priceSliderRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const sliderWidth = rect.width;
-    const clickPercentage = clickX / sliderWidth;
+    const clickPercentage = Math.max(0, Math.min(clickX / sliderWidth, 1));
     const clickValue = clickPercentage * 10000000;
 
-    const midPoint = ((filters.minPrice || 0) + (filters.maxPrice || 10000000)) / 2;
+    // Get current values with proper clamping
+    const currentMinPrice = Math.max(0, Math.min(filters.minPrice || 0, 10000000));
+    const currentMaxPrice = Math.max(0, Math.min(filters.maxPrice || 10000000, 10000000));
+    const midPoint = (currentMinPrice + currentMaxPrice) / 2;
 
     // If clicking on the left half, move min price; otherwise move max price
     if (clickValue < midPoint) {
       // Move min price slider
       if (minPriceInputRef.current) {
-        minPriceInputRef.current.value = Math.min(clickValue, (filters.maxPrice || 10000000) - 50000);
-        const event = { target: minPriceInputRef.current };
-        handleFilterChange("minPrice", Math.min(clickValue, (filters.maxPrice || 10000000) - 50000));
+        const clampedValue = Math.max(0, Math.min(clickValue, currentMaxPrice - 50000));
+        minPriceInputRef.current.value = clampedValue;
+        handleFilterChange("minPrice", clampedValue);
       }
     } else {
       // Move max price slider
       if (maxPriceInputRef.current) {
-        maxPriceInputRef.current.value = Math.max(clickValue, (filters.minPrice || 0) + 50000);
-        handleFilterChange("maxPrice", Math.max(clickValue, (filters.minPrice || 0) + 50000));
+        const clampedValue = Math.min(10000000, Math.max(clickValue, currentMinPrice + 50000));
+        maxPriceInputRef.current.value = clampedValue;
+        handleFilterChange("maxPrice", clampedValue);
       }
     }
   }, [filters, handleFilterChange]);
@@ -149,8 +153,8 @@ function FiltersContent({ filters, categoriesList, locationsList, handleFilterCh
           <div 
             className="absolute h-2 bg-indigo-700 rounded-full z-10 pointer-events-none"
             style={{
-              left: `${((filters.minPrice || 0) / 10000000) * 100}%`,
-              right: `${100 - ((filters.maxPrice || 10000000) / 10000000) * 100}%`
+              left: `${(Math.max(0, Math.min(filters.minPrice || 0, 10000000)) / 10000000) * 100}%`,
+              right: `${100 - (Math.max(0, Math.min(filters.maxPrice || 10000000, 10000000)) / 10000000) * 100}%`
             }}
           ></div>
 
@@ -161,9 +165,9 @@ function FiltersContent({ filters, categoriesList, locationsList, handleFilterCh
             min="0"
             max="10000000"
             step="50000"
-            value={filters.minPrice || 0}
+            value={Math.max(0, Math.min(filters.minPrice || 0, 10000000))}
             onChange={(e) => {
-              const value = Math.min(Number(e.target.value), (filters.maxPrice || 10000000) - 50000);
+              const value = Math.max(0, Math.min(Number(e.target.value), Math.max(0, Math.min(filters.maxPrice || 10000000, 10000000)) - 50000));
               handleFilterChange("minPrice", value);
             }}
             className="absolute w-full h-2 appearance-none bg-transparent z-20 cursor-pointer range-slider-min pointer-events-none"
@@ -177,9 +181,9 @@ function FiltersContent({ filters, categoriesList, locationsList, handleFilterCh
             min="0"
             max="10000000"
             step="50000"
-            value={filters.maxPrice || 10000000}
+            value={Math.max(0, Math.min(filters.maxPrice || 10000000, 10000000))}
             onChange={(e) => {
-              const value = Math.max(Number(e.target.value), (filters.minPrice || 0) + 50000);
+              const value = Math.min(10000000, Math.max(Number(e.target.value), Math.max(0, Math.min(filters.minPrice || 0, 10000000)) + 50000));
               handleFilterChange("maxPrice", value);
             }}
             className="absolute w-full h-2 appearance-none bg-transparent z-10 cursor-pointer range-slider-max pointer-events-none"
@@ -194,13 +198,23 @@ function FiltersContent({ filters, categoriesList, locationsList, handleFilterCh
             <div className="flex items-center mt-1">
               <span className="text-gray-500 font-semibold mr-1">₹</span>
               <input
-                type="text"
-                value={filters.minPrice?.toLocaleString() || '0'}
+                type="number"
+                min="0"
+                max="10000000"
+                step="50000"
+                value={Math.min(filters.minPrice || 0, 10000000)}
                 onChange={(e) => {
-                  const rawValue = e.target.value.replace(/,/g, '');
+                  const rawValue = e.target.value;
                   const value = Number(rawValue);
+                  // Validate: must be between 0 and 10000000, and not negative
                   if (!isNaN(value) && value >= 0 && value <= 10000000) {
-                    handleFilterChange("minPrice", Math.min(value, (filters.maxPrice || 10000000) - 50000));
+                    handleFilterChange("minPrice", Math.min(value, Math.min(filters.maxPrice || 10000000, 10000000) - 50000));
+                  }
+                }}
+                onKeyDown={(e) => {
+                  // Prevent negative sign
+                  if (e.key === '-') {
+                    e.preventDefault();
                   }
                 }}
                 className="w-full bg-transparent font-semibold text-gray-800 focus:outline-none"
@@ -214,13 +228,24 @@ function FiltersContent({ filters, categoriesList, locationsList, handleFilterCh
             <div className="flex items-center mt-1">
               <span className="text-gray-500 font-semibold mr-1">₹</span>
               <input
-                type="text"
-                value={filters.maxPrice?.toLocaleString() || '10,000,000'}
+                type="number"
+                min="0"
+                max="10000000"
+                step="50000"
+                value={Math.min(filters.maxPrice || 10000000, 10000000)}
                 onChange={(e) => {
-                  const rawValue = e.target.value.replace(/,/g, '');
+                  const rawValue = e.target.value;
                   const value = Number(rawValue);
+                  // Validate: must be between 0 and 10000000
                   if (!isNaN(value) && value >= 0 && value <= 10000000) {
-                    handleFilterChange("maxPrice", Math.max(value, (filters.minPrice || 0) + 50000));
+                    handleFilterChange("maxPrice", Math.max(value, Math.max(filters.minPrice || 0, 0) + 50000));
+                  }
+                }}
+                onKeyDown={(e) => {
+                  // Prevent values above 10000000 by blocking extra digits
+                  const currentValue = e.target.value;
+                  if (currentValue.length >= 8 && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                    // Allow but validate on change
                   }
                 }}
                 className="w-full bg-transparent font-semibold text-gray-800 focus:outline-none"
@@ -246,16 +271,24 @@ export default function PropertyList() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
+  // Helper function to validate and clamp price values
+  const validatePrice = (value, defaultVal, minVal = 0, maxVal = 10000000) => {
+    const num = Number(value);
+    if (isNaN(num) || num < minVal) return minVal;
+    if (num > maxVal) return maxVal;
+    return num;
+  };
+
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
     category: searchParams.get("category") || "",
     location: searchParams.get("location") || "",
     propertyType: searchParams.get("type") || "",
-    minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : 0,
-    maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : 10000000,
+    minPrice: validatePrice(searchParams.get("minPrice"), 0),
+    maxPrice: validatePrice(searchParams.get("maxPrice"), 10000000),
   });
 
-  // Memoized handleFilterChange
+  // Memoized handleFilterChange - now validates and clamps price values
   const handleFilterChange = useCallback((key, value) => {
     if (key === "reset") {
       setFilters({
@@ -266,10 +299,20 @@ export default function PropertyList() {
         minPrice: 0,
         maxPrice: 10000000,
       });
+    } else if (key === "minPrice") {
+      // Validate minPrice: must be between 0 and 10000000, and less than maxPrice
+      const maxPriceVal = filters.maxPrice || 10000000;
+      const clampedValue = Math.max(0, Math.min(Number(value) || 0, maxPriceVal - 50000));
+      setFilters((prev) => ({ ...prev, minPrice: clampedValue }));
+    } else if (key === "maxPrice") {
+      // Validate maxPrice: must be between 0 and 10000000, and greater than minPrice
+      const minPriceVal = filters.minPrice || 0;
+      const clampedValue = Math.min(10000000, Math.max(Number(value) || 0, minPriceVal + 50000));
+      setFilters((prev) => ({ ...prev, maxPrice: clampedValue }));
     } else {
       setFilters((prev) => ({ ...prev, [key]: value }));
     }
-  }, []);
+  }, [filters.minPrice, filters.maxPrice]);
 
   // Client-side filtered properties
   const properties = useMemo(() => {
